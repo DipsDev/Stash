@@ -3,7 +3,7 @@ import pickle
 import zlib
 
 from models import Commit
-from objects import write_file, read_file, hash_object, create_tree
+from objects import write_file, read_file, hash_object, create_tree, resolve_object_location
 
 
 class Actions:
@@ -17,7 +17,7 @@ class Actions:
             print(zlib.decompress(f.read()).decode())
 
     def ls_tree(self, tree_hash):
-        tree_path = os.path.join(self.full_repo, "objects", tree_hash[:2], tree_hash[2:])
+        tree_path = resolve_object_location(self.full_repo, tree_hash)
         tree = zlib.decompress(read_file(tree_path)).decode()
         print(tree)
 
@@ -86,7 +86,7 @@ class Actions:
         commit_data: Commit = loaded_commits.get(current_commit)
         assert commit_data is not None
 
-        tree_path = os.path.join(self.full_repo, "objects", commit_data.get_hash()[:2], commit_data.get_hash()[2:])
+        tree_path = resolve_object_location(self.full_repo, commit_data.get_hash())
         tree = zlib.decompress(read_file(tree_path)).decode()
         print(tree)
         print("pushing commit ->", commit_data.get_message())
