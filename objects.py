@@ -63,3 +63,7 @@ def hash_object(repo, data, type_="blob"):
         os.makedirs(os.path.dirname(path), exist_ok=True)
     write_file(path, zlib.compress(data))
     return sha1
+
+
+def resolve_object_location(repo, obj_hash):
+    return os.path.join(repo, "objects", obj_hash[:2], obj_hash[2:])
