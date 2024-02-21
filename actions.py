@@ -16,6 +16,11 @@ class Actions:
         with open(os.path.join(self.full_repo, "objects", hash_id[:2], hash_id[2:]), "rb") as f:
             print(zlib.decompress(f.read()).decode())
 
+    def ls_tree(self, tree_hash):
+        tree_path = os.path.join(self.full_repo, "objects", tree_hash[:2], tree_hash[2:])
+        tree = zlib.decompress(read_file(tree_path)).decode()
+        print(tree)
+
     def init(self):
         """
         creates and initializes a new stash repository
@@ -59,7 +64,7 @@ class Actions:
         indices = pickle.loads(read_file(index_path))
 
         # create the tree
-        sha1, tree = create_tree(self.repo, indices)
+        sha1, tree = create_tree(self.repo, indices, current_=self.repo)
 
         # read the parent file
         parent = read_file(os.path.join(self.full_repo, "refs/head", "main"), binary_=False)
@@ -76,4 +81,12 @@ class Actions:
 
     def push(self):
         """push changes to the cloud"""
-        pass
+        current_commit = read_file(os.path.join(self.full_repo, "refs/head", "main"), binary_=False)
+        loaded_commits = pickle.loads(read_file(os.path.join(self.full_repo, "refs/commit", "main")))
+        commit_data: Commit = loaded_commits.get(current_commit)
+        assert commit_data is not None
+
+        tree_path = os.path.join(self.full_repo, "objects", commit_data.get_hash()[:2], commit_data.get_hash()[2:])
+        tree = zlib.decompress(read_file(tree_path)).decode()
+        print(tree)
+        print("pushing commit ->", commit_data.get_message())

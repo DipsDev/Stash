@@ -6,6 +6,8 @@ import hashlib
 import os
 import zlib
 
+from models import TreeNode, Tree
+
 
 def write_file(path, data, binary_=True):
     """
@@ -25,20 +27,27 @@ def read_file(path, binary_=True):
         return f.read()
 
 
-def create_tree(repo, files: dict):
+def create_tree(repo, files: dict, current_):
     """Creates a new commit tree"""
     entries = []
-    for it in os.scandir(repo):
+    for it in os.scandir(current_):
         if it.name == ".stash":
             continue
-        full_path = os.path.join(repo, it.name)
+        full_path = os.path.join(current_, it.name)
         if it.is_file():
             if it.name in files:
                 sha1 = hash_object(repo, read_file(full_path))
-                entries.append(sha1)
+                leaf = TreeNode(full_path, sha1)
+                entries.append(leaf)
         else:
-            create_tree(full_path, files)
-    sha1 = hash_object(repo, "".join(entries).encode(), type_="tree")
+            new_sha1, new_entries = create_tree(repo, files, full_path)
+            entries.append(Tree(full_path, new_sha1, new_entries))
+
+    final_str = ""
+    for i in entries:
+        final_str += i.get_type() + " " + i.get_hash() + " " + i.get_path() + "\n"
+
+    sha1 = hash_object(repo, final_str.encode(), type_="tree")
     return sha1, entries
 
 
