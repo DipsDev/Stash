@@ -45,7 +45,7 @@ def create_tree(repo, files: dict, current_):
 
     final_str = ""
     for i in entries:
-        final_str += i.get_type() + " " + i.get_hash() + " " + i.get_path() + "\n"
+        final_str += f"{i.get_type()} {i.get_hash()} {i.get_path()}\n"
 
     sha1 = hash_object(repo, final_str.encode(), type_="tree")
     return sha1, entries
