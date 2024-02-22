@@ -5,7 +5,7 @@ TODO: delete before production
 """
 import actions
 
-ac = actions.Actions("./test_repo")
+ac = actions.Actions(r"D:\code\stash\client\test_repo")
 
 
 ac.push()
