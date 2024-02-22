@@ -25,6 +25,21 @@ class Actions:
         commit: Commits the current changes to the database
         push: Pushes the changes to the cloud
 
+    Example Usage:
+        # Create the repo object
+        my_repo = Actions("./test_repo")
+
+        # Add files for indexing
+        my_repo.add("my_text.txt")
+        my_repo.add("my_python_file.py")
+
+        # Commit the changes
+        my_repo.commit("First Commit")
+
+        # Push changes
+        my_repo.push()
+
+
 
     """
     def __init__(self, repo: str):
