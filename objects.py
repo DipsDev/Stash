@@ -1,12 +1,12 @@
-# stash init
-# stash add .
-# stash commit
-# stash push
+"""
+Module that exports multi object related functions
+"""
 import hashlib
 import os
 import zlib
 
-from models import TreeNode, Tree
+from models.tree import Tree
+from models.treenode import TreeNode
 
 
 def write_file(path, data, binary_=True):
@@ -55,7 +55,7 @@ def hash_object(repo, data, type_="blob"):
     """
     Hashes an object and writes the data to the database
     """
-    header = "{}{}".format(type_, len(data)).encode()
+    header = f"{type_}{len(data)}".encode()
     full_data = header + b'\x00' + data
     sha1 = hashlib.sha1(full_data).hexdigest()
     path = os.path.join(repo, ".stash", "objects", sha1[:2], sha1[2:])
@@ -66,4 +66,5 @@ def hash_object(repo, data, type_="blob"):
 
 
 def resolve_object_location(repo, obj_hash):
+    """resolves an object hash to its path on the disk"""
     return os.path.join(repo, "objects", obj_hash[:2], obj_hash[2:])

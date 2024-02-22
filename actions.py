@@ -1,12 +1,32 @@
+"""
+Module that exports the Actions class
+"""
 import os
 import pickle
 import zlib
 
-from models import Commit
+from models.commit import Commit
 from objects import write_file, read_file, hash_object, create_tree, resolve_object_location
 
 
 class Actions:
+    """
+    Class representing the stash repository.
+
+    Attributes:
+        repo (str): The path of the repository
+
+    Methods:
+        __init__: Initializes a repo object (not the actual repo).
+        init: Initializes a repo database.
+        cat_file: Prints out the content of an object.
+        ls_tree: Prints out the contents of a commit tree.
+        add: Adds a file to the index list.
+        commit: Commits the current changes to the database
+        push: Pushes the changes to the cloud
+
+
+    """
     def __init__(self, repo: str):
         self.repo = repo
         self.full_repo = os.path.join(self.repo, ".stash")
@@ -17,6 +37,7 @@ class Actions:
             print(zlib.decompress(f.read()).decode())
 
     def ls_tree(self, tree_hash):
+        """Prints out the contents of a commit tree"""
         tree_path = resolve_object_location(self.full_repo, tree_hash)
         tree = zlib.decompress(read_file(tree_path)).decode()
         print(tree)
@@ -41,7 +62,7 @@ class Actions:
 
         # head file, where current commit hash is stored
         write_file(os.path.join(self.full_repo, "refs/head", "main"), "", binary_=False)
-        print('initialized empty repository at {}'.format(self.repo))
+        print(f'initialized empty repository at {self.repo}')
 
     def add(self, path: str):
         """adds a new file for the index list - to be tracked"""
@@ -55,7 +76,7 @@ class Actions:
         indices[os.path.basename(path)] = sha1
 
         write_file(index_path, pickle.dumps(indices))
-        print("added {} to the stash repo: {}".format(os.path.basename(path), sha1))
+        print(f"added {os.path.basename(path)} to the stash repo: {sha1}")
 
     def commit(self, message: str):
         """commits the changes and saves them"""
@@ -64,7 +85,7 @@ class Actions:
         indices = pickle.loads(read_file(index_path))
 
         # create the tree
-        sha1, tree = create_tree(self.repo, indices, current_=self.repo)
+        sha1, _tree = create_tree(self.repo, indices, current_=self.repo)
 
         # read the parent file
         parent = read_file(os.path.join(self.full_repo, "refs/head", "main"), binary_=False)
@@ -81,8 +102,10 @@ class Actions:
 
     def push(self):
         """push changes to the cloud"""
-        current_commit = read_file(os.path.join(self.full_repo, "refs/head", "main"), binary_=False)
-        loaded_commits = pickle.loads(read_file(os.path.join(self.full_repo, "refs/commit", "main")))
+        head_commit_path = os.path.join(self.full_repo, "refs/head", "main")
+        current_commit = read_file(head_commit_path, binary_=False)
+        loaded_commits = pickle.loads(read_file(
+            os.path.join(self.full_repo, "refs/commit", "main")))
         commit_data: Commit = loaded_commits.get(current_commit)
         assert commit_data is not None
 
