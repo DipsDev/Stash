@@ -3,9 +3,17 @@ Module that represents a main
 
 TODO: delete before production
 """
-import actions
+import tempfile
+from stash import Stash
 
-ac = actions.Actions(r"D:\code\stash\client\test_repo")
+temp_dir = tempfile.mkdtemp()
+print(f"Generated a new temp folder {temp_dir}")
 
+
+ac = Stash(temp_dir)
+
+ac.push()
+
+ac.checkout("main")
 
 ac.push()
