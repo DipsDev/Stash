@@ -17,8 +17,8 @@ class Stash:
         self.initialized = os.path.exists(self.repo_path)
         self.stash_actions = Actions(folder_path)
 
-        self.current_branch_ref = None
-        self.branch_name = None
+        self.current_branch_ref = "refs/head/main"
+        self.branch_name = "main"
         if os.path.exists(os.path.join(self.repo_path, "HEAD")):
             unmod_ref = read_file(os.path.join(self.repo_path, "HEAD"), binary_=False)
             self.current_branch_ref = unmod_ref.split(" ")[1]  # ref: refs/head/main
