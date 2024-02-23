@@ -26,18 +26,21 @@ class Actions:
         push: Pushes the changes to the cloud
 
     Example Usage:
-        # Create the repo object
-        my_repo = Actions("./test_repo")
+        # Create the actions object
+        my_actions = Actions("./test_repo")
 
         # Add files for indexing
-        my_repo.add("my_text.txt")
-        my_repo.add("my_python_file.py")
+        my_actions.add("my_text.txt")
+        my_actions.add("my_python_file.py")
 
         # Commit the changes
-        my_repo.commit("First Commit")
+        my_actions.commit("First Commit")
 
         # Push changes
-        my_repo.push()
+        my_actions.push()
+
+        # Change branch
+        my_actions.checkout("dev", upsert=True)
 
 
 
