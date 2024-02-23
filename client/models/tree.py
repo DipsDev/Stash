@@ -1,7 +1,7 @@
 """
 Module that exports the tree class
 """
-from .treenode import TreeNode
+from .tree_node import TreeNode
 
 
 class Tree(TreeNode):

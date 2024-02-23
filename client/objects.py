@@ -6,7 +6,7 @@ import os
 import zlib
 
 from models.tree import Tree
-from models.treenode import TreeNode
+from models.tree_node import TreeNode
 
 
 def write_file(path, data, binary_=True):
