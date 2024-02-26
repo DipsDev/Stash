@@ -22,14 +22,40 @@ class CommitHandler:
         """Finds the diff between two commits. given their hashes"""
         cmt1_data = self.extract_commit_data(commit1_sha)
         cmt2_data = self.extract_commit_data(commit2_sha)
+
         return self._find_tree_diffs(cmt1_data.get_hash(), cmt2_data.get_hash())
 
-    def _find_tree_diffs(self, h1, h2):
+    def _find_tree_diffs(self, h1: str, h2: str):
         """Returns the diff between trees"""
         if h1 == h2:  # Same object
             return
-        h1_data = objects.resolve_object(self.full_repo, h1)
-        h2_data = objects.resolve_object(self.full_repo, h2)
+        h1_data = objects.resolve_object(self.full_repo, h1).decode()
+        h2_data = objects.resolve_object(self.full_repo, h2).decode()
+
+        parsed_h1 = Tree.parse_tree(h1_data)
+        parsed_h2 = Tree.parse_tree(h2_data)
+
+        for key, obj in parsed_h2.items():
+            if key not in parsed_h1:
+                if obj.get_type() == "blob":
+                    print(f"+ {key}")
+                if obj.get_type() == "tree":
+                    print(f"+ {key}")
+                continue
+
+            if obj.get_hash() != parsed_h1.get(key).get_hash():
+                if obj.get_type() == "blob":
+                    print(f"~ {key}")
+                elif obj.get_type() == "tree":
+                    self._find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
+                continue
+
+        for key, obj in parsed_h1.items():
+            if key not in parsed_h2:
+                if obj.get_type() == "blob":
+                    print(f"- {key}")
+                if obj.get_type() == "tree":
+                    print(f"- {key}")
 
     def get_head_commit(self, branch_name):
         """Returns the head commit hash by branch name"""
@@ -43,11 +69,13 @@ class CommitHandler:
                 continue
             full_path = os.path.join(current_, it.name)
             if it.is_file():
-                if it.name in files:
+                if full_path in files:
                     sha1 = objects.hash_object(self.repo, read_file(full_path))
                     leaf = TreeNode(full_path, sha1)
                     entries.append(leaf)
             else:
+                if len(os.listdir(full_path)) == 0:
+                    continue
                 new_sha1, new_entries = self.create_tree(files, full_path)
                 entries.append(Tree(full_path, new_sha1, new_entries))
 

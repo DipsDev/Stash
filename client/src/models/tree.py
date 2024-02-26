@@ -19,7 +19,7 @@ class Tree(TreeNode):
         self.entries = entries
 
     @classmethod
-    def parse_tree(cls, tree_data) -> dict[str, TreeNode]:
+    def parse_tree(cls, tree_data: str) -> dict[str, TreeNode]:
         """Parse a tree"""
         parsing = {}
         splits = tree_data.split("\n")
