@@ -6,7 +6,9 @@ import pickle
 
 import objects
 from models.commit import Commit
-from objects import write_file, read_file, create_tree
+from models.tree import Tree
+from models.tree_node import TreeNode
+from objects import write_file, read_file
 
 
 class CommitHandler:
@@ -16,13 +18,45 @@ class CommitHandler:
         self.full_repo = full_repo
         self.repo = repo
 
-    def find_diff(self, commit1_sha, commit2_sha, branch="main"):
+    def find_diff(self, commit1_sha, commit2_sha):
         """Finds the diff between two commits. given their hashes"""
-        raise NotImplementedError()
+        cmt1_data = self.extract_commit_data(commit1_sha)
+        cmt2_data = self.extract_commit_data(commit2_sha)
+        return self._find_tree_diffs(cmt1_data.get_hash(), cmt2_data.get_hash())
+
+    def _find_tree_diffs(self, h1, h2):
+        """Returns the diff between trees"""
+        if h1 == h2:  # Same object
+            return
+        h1_data = objects.resolve_object(self.full_repo, h1)
+        h2_data = objects.resolve_object(self.full_repo, h2)
 
     def get_head_commit(self, branch_name):
         """Returns the head commit hash by branch name"""
         return read_file(os.path.join(self.full_repo, "refs/head", branch_name), binary_=False)
+
+    def create_tree(self, files: dict, current_):
+        """Creates a new commit tree"""
+        entries = []
+        for it in os.scandir(current_):
+            if it.name == ".stash":
+                continue
+            full_path = os.path.join(current_, it.name)
+            if it.is_file():
+                if it.name in files:
+                    sha1 = objects.hash_object(self.repo, read_file(full_path))
+                    leaf = TreeNode(full_path, sha1)
+                    entries.append(leaf)
+            else:
+                new_sha1, new_entries = self.create_tree(files, full_path)
+                entries.append(Tree(full_path, new_sha1, new_entries))
+
+        final_str = ""
+        for i in entries:
+            final_str += f"{i.get_type()} {i.get_hash()} {i.get_path()}\n"
+
+        sha1 = objects.hash_object(self.repo, final_str.encode(), type_="tree")
+        return sha1, entries
 
     def extract_commit_data(self, sha1) -> Commit:
         """Returns the commit data by hash and branch name"""
@@ -48,14 +82,14 @@ class CommitHandler:
         indices = pickle.loads(read_file(index_path))
 
         # create the tree
-        tree_sha, _tree = create_tree(self.repo, indices, current_=self.repo)
+        tree_sha, _tree = self.create_tree(indices, current_=self.repo)
 
         # read the parent file
         parent = read_file(os.path.join(self.full_repo, "refs/head",
                                         branch_name), binary_=False)
 
         cmt = Commit(message, tree_sha, parent)
-        sha1 = objects.hash_object(self.repo, str(cmt).encode())
+        sha1 = objects.hash_object(self.repo, str(cmt).encode(), type_="commit")
 
         # save the new tree to the current commit
         write_file(os.path.join(self.full_repo, "refs/head",
