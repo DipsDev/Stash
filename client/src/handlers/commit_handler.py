@@ -45,7 +45,8 @@ class CommitHandler:
                 if obj.get_type() == "blob":
                     lines += f"~ {key}\n"
                 elif obj.get_type() == "tree":
-                    self._find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
+                    lines += "\n" + \
+                             self._find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
                 continue
 
         for key, obj in parsed_h1.items():
