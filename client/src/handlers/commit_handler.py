@@ -28,7 +28,8 @@ class CommitHandler:
     def _find_tree_diffs(self, h1: str, h2: str):
         """Returns the diff between trees"""
         if h1 == h2:  # Same object
-            return
+            return ""
+        lines = ""
         h1_data = objects.resolve_object(self.full_repo, h1).decode()
         h2_data = objects.resolve_object(self.full_repo, h2).decode()
 
@@ -37,15 +38,12 @@ class CommitHandler:
 
         for key, obj in parsed_h2.items():
             if key not in parsed_h1:
-                if obj.get_type() == "blob":
-                    print(f"+ {key}")
-                if obj.get_type() == "tree":
-                    print(f"+ {key}")
+                lines += f"+ {key}\n"
                 continue
 
             if obj.get_hash() != parsed_h1.get(key).get_hash():
                 if obj.get_type() == "blob":
-                    print(f"~ {key}")
+                    lines += f"~ {key}\n"
                 elif obj.get_type() == "tree":
                     self._find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
                 continue
@@ -53,9 +51,11 @@ class CommitHandler:
         for key, obj in parsed_h1.items():
             if key not in parsed_h2:
                 if obj.get_type() == "blob":
-                    print(f"- {key}")
+                    lines += f"- {key}\n"
                 if obj.get_type() == "tree":
-                    print(f"- {key}")
+                    lines += f"- {key}\n"
+
+        return lines
 
     def get_head_commit(self, branch_name):
         """Returns the head commit hash by branch name"""
