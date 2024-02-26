@@ -90,19 +90,18 @@ class Actions:
         # Write the current branch to the HEAD file. default: main branch
         write_file(os.path.join(self.full_repo, "HEAD"), "ref: refs/head/main", binary_=False)
 
-
-
     def add(self, path: str):
         """adds a new file for the index list - to be tracked"""
 
         path = os.path.join(self.repo, path)
+        path = os.path.normpath(path)
         # Get the index database
         index_path = os.path.join(self.full_repo, "index", "d")
         # Load the database
         indices = pickle.loads(read_file(index_path))
         sha1 = hash_object(self.repo, read_file(path))
         # Update the database
-        indices[os.path.basename(path)] = sha1
+        indices[path] = sha1
 
         write_file(index_path, pickle.dumps(indices))
 

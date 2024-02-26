@@ -18,11 +18,13 @@ class Tree(TreeNode):
         super().__init__(path, tree_hash, type_="tree")
         self.entries = entries
 
-
     @classmethod
-    def parse_tree(cls, tree_data) -> list:
+    def parse_tree(cls, tree_data) -> dict[str, TreeNode]:
         """Parse a tree"""
+        parsing = {}
         splits = tree_data.split("\n")
         del splits[-1]
-        return [d.split(" ") for d in splits]
-
+        prev = [d.split(" ") for d in splits]
+        for i in prev:
+            parsing[i[-1]] = TreeNode(path=i[-1], node_hash=i[1], type_=i[0])
+        return parsing

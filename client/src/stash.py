@@ -58,7 +58,7 @@ class Stash:
         """Add a file to the index list"""
         assert self.initialized, "Stash repository isn't initialized, use stash init to start"
 
-        self.stash_actions.add(os.path.join(self.folder_path, filename))
+        self.stash_actions.add(filename)
 
         if not self.test_mode:
             print(f"added {filename} to the stash repo")

@@ -35,7 +35,19 @@ class AddAction(unittest.TestCase):
 
         with open(os.path.join(self.test_dir_location, ".stash", "index", "d"), "rb") as f:
             dicts = pickle.load(f)
-        self.assertIn("my_text.txt", dicts)
+        self.assertIn(os.path.join(self.test_dir_location, "my_text.txt"), dicts)
+
+    def test_working_with_relative_paths(self):
+        """Should work with normal parameters"""
+        os.mkdir(os.path.join(self.test_dir_location, "my_folder"))
+        with open(os.path.join(self.test_dir_location, "my_folder", "my_text.txt"), "w", encoding="utf-8") as f:
+            f.write("Hello World!")
+
+        self.stash.add("./my_folder/my_text.txt")
+
+        with open(os.path.join(self.test_dir_location, ".stash", "index", "d"), "rb") as f:
+            dicts = pickle.load(f)
+        self.assertIn(os.path.join(self.test_dir_location, "my_folder", "my_text.txt"), dicts)
 
     def test_nonexistent_file(self):
         """Should throw an error if file is nonexistent"""
