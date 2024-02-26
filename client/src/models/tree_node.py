@@ -13,7 +13,7 @@ class TreeNode:
         type_ (str): The type of the node.
     """
 
-    def __init__(self, path: str, node_hash: str, type_="node"):
+    def __init__(self, path: str, node_hash: str, type_="blob"):
         self.path = path
         self.hash = node_hash
         self.type = type_
