@@ -9,13 +9,13 @@ class Commit:
 
     Attributes:
         message (str): The message of the commit.
-        commit_hash (str): The hash of the commit.
+        tree_hash (str): The hash of the commit.
         parent (str): The hash of the parent commit.
     """
 
-    def __init__(self, message: str, commit_hash: str, parent: str):
+    def __init__(self, message: str, tree_hash: str, parent: str):
         self.parent = parent
-        self.hash = commit_hash
+        self.hash = tree_hash
         self.message = message
 
     def get_message(self):
@@ -31,5 +31,5 @@ class Commit:
         return self.parent
 
     def __str__(self):
-        final_str = f"parent {self.parent}\n tree {self.hash}\n message {self.message}\n"
+        final_str = f"parent {self.parent}\ntree {self.hash}\n\n{self.message}"
         return final_str

@@ -11,8 +11,13 @@ from objects import read_file, write_file
 class Stash:
     """The main stash class"""
 
-    def __init__(self, folder_path):
+    def __init__(self, folder_path, test_mode_=False):
         self.folder_path = folder_path
+        self.test_mode = test_mode_
+
+        if not os.path.exists(self.folder_path):
+            raise FileNotFoundError("Couldn't find repository folder")
+
         self.repo_path = os.path.join(folder_path, ".stash")
         self.initialized = os.path.exists(self.repo_path)
         self.stash_actions = Actions(folder_path)
@@ -29,12 +34,19 @@ class Stash:
         self.stash_actions.init()
         self.initialized = True
         self.current_branch_ref = "refs/head/main"
+        if not self.test_mode:
+            print(f'initialized empty repository at {self.folder_path}')
 
     def commit(self, message: str):
         """Commit the changes to the current branch"""
         assert self.initialized, "Stash repository isn't initialized, use stash init to start"
 
-        self.stash_actions.commit(message, self.branch_name)
+        cmt_hash = self.stash_actions.commit(message, self.branch_name)
+        if self.test_mode:
+            return cmt_hash
+
+        print("Changes were committed")
+        return cmt_hash
 
     def push(self):
         """Push the commits to the cloud"""
@@ -47,6 +59,9 @@ class Stash:
         assert self.initialized, "Stash repository isn't initialized, use stash init to start"
 
         self.stash_actions.add(os.path.join(self.folder_path, filename))
+
+        if not self.test_mode:
+            print(f"added {filename} to the stash repo")
 
     def checkout(self, branch_name: str, upsert=False):
         """Switch to a different branch, or create a new one"""

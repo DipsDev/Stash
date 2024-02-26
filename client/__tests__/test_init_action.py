@@ -10,7 +10,7 @@ from client.src.stash import Stash
 
 
 class InitAction(unittest.TestCase):
-    """A class that __tests__ the init function, found in actions.py"""
+    """A class that __tests__ the init function, found in handlers.py"""
 
     def setUp(self) -> None:
         self.test_dir_location = tempfile.mkdtemp()

@@ -5,6 +5,7 @@ import hashlib
 import os
 import zlib
 
+from models.commit import Commit
 from models.tree import Tree
 from models.tree_node import TreeNode
 
@@ -21,10 +22,15 @@ def write_file(path, data, binary_=True):
         f.write(data)
 
 
-def read_file(path, binary_=True):
+def read_file(path, binary_=True) -> bytes or str:
     """Reads a binary file"""
     with open(path, "rb" if binary_ else "r") as f:
         return f.read()
+
+
+def find_diff(cmt1: Commit, cmt2: Commit):
+    """Find the diff between 2 commits"""
+    print(cmt1, cmt2)
 
 
 def create_tree(repo, files: dict, current_):
@@ -65,6 +71,12 @@ def hash_object(repo, data, type_="blob"):
     return sha1
 
 
-def resolve_object_location(repo, obj_hash):
+def resolve_object(full_repo, sha1) -> bytes:
+    """Returns the original content of an object"""
+    path = resolve_object_location(full_repo, sha1)
+    return zlib.decompress(bytes(read_file(path, binary_=True)))
+
+
+def resolve_object_location(full_repo, obj_hash):
     """resolves an object hash to its path on the disk"""
-    return os.path.join(repo, "objects", obj_hash[:2], obj_hash[2:])
+    return os.path.join(full_repo, "objects", obj_hash[:2], obj_hash[2:])

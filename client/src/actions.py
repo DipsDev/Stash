@@ -5,8 +5,10 @@ import os
 import pickle
 import zlib
 
+import objects
+from handlers.commit_handler import CommitHandler
 from models.commit import Commit
-from objects import write_file, read_file, hash_object, create_tree, resolve_object_location
+from objects import write_file, read_file, hash_object
 
 
 class Actions:
@@ -26,7 +28,7 @@ class Actions:
         push: Pushes the changes to the cloud
 
     Example Usage:
-        # Create the actions object
+        # Create the handlers object
         my_actions = Actions("./test_repo")
 
         # Add files for indexing
@@ -50,6 +52,8 @@ class Actions:
         self.repo = repo
         self.full_repo = os.path.join(self.repo, ".stash")
 
+        self.commit_handler = CommitHandler(self.repo, self.full_repo)
+
     def cat_file(self, hash_id):
         """Cats the content of a file by its hash"""
 
@@ -59,8 +63,7 @@ class Actions:
     def ls_tree(self, tree_hash):
         """Prints out the contents of a commit tree"""
 
-        tree_path = resolve_object_location(self.full_repo, tree_hash)
-        tree = zlib.decompress(read_file(tree_path)).decode()
+        tree = objects.resolve_object(self.full_repo, tree_hash).decode()
         print(tree)
 
     def init(self):
@@ -87,7 +90,7 @@ class Actions:
         # Write the current branch to the HEAD file. default: main branch
         write_file(os.path.join(self.full_repo, "HEAD"), "ref: refs/head/main", binary_=False)
 
-        print(f'initialized empty repository at {self.repo}')
+
 
     def add(self, path: str):
         """adds a new file for the index list - to be tracked"""
@@ -102,46 +105,19 @@ class Actions:
         indices[os.path.basename(path)] = sha1
 
         write_file(index_path, pickle.dumps(indices))
-        print(f"added {os.path.basename(path)} to the stash repo: {sha1}")
 
     def commit(self, message: str, branch_name: str):
-        """commits the changes and saves them"""
+        """commits the changes and saves them locally"""
 
-        # create the path to the indexes file, and read it
-        index_path = os.path.join(self.full_repo, "index", "d")
-        indices = pickle.loads(read_file(index_path))
-
-        # create the tree
-        sha1, _tree = create_tree(self.repo, indices, current_=self.repo)
-
-        # read the parent file
-        parent = read_file(os.path.join(self.full_repo, "refs/head",
-                                        branch_name), binary_=False)
-        # save the new tree to the current commit
-        write_file(os.path.join(self.full_repo, "refs/head",
-                                branch_name), sha1, binary_=False)
-
-        # create the commit object and update it to the disk
-        cmt = Commit(message, sha1, parent)
-        commits = pickle.loads(read_file(os.path.join(self.full_repo, "refs/commit",
-                                                      branch_name)))
-        commits[sha1] = cmt
-        write_file(os.path.join(self.full_repo, "refs/commit", branch_name),
-                   pickle.dumps(commits))
-
-        print("commit added ", sha1)
+        return self.commit_handler.commit(message, branch_name)
 
     def push(self, connection_url: str, branch_name: str):
         """push changes to the cloud"""
 
-        head_commit_path = os.path.join(self.full_repo, "refs/head", branch_name)
-        current_commit = read_file(head_commit_path, binary_=False)
-        loaded_commits = pickle.loads(read_file(
-            os.path.join(self.full_repo, "refs/commit", branch_name)))
-        commit_data: Commit = loaded_commits.get(current_commit)
+        current_commit = self.commit_handler.get_head_commit(branch_name)
+        commit_data: Commit = self.commit_handler.extract_commit_data(current_commit)
         assert commit_data is not None
 
-        tree_path = resolve_object_location(self.full_repo, commit_data.get_hash())
-        _tree = zlib.decompress(read_file(tree_path)).decode()
+        _tree = objects.resolve_object(self.full_repo, commit_data.get_hash())
         print("pushing commit ->", commit_data.get_message())
         print(f"to {connection_url}")
