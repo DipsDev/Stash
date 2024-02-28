@@ -33,7 +33,9 @@ class Stash:
     @cli_parser.register_command(lambda params: len(params) == 0)
     def init(self):
         """Initialize the repository"""
-        assert not self.initialized, "stash: repository is already initialized. See 'stash --help'."
+        if self.initialized:
+            print("stash: repository is initialized, use 'stash --help'.")
+            return
 
         self.stash_actions.init()
         self.initialized = True
@@ -44,7 +46,9 @@ class Stash:
     @cli_parser.register_command(lambda params: len(params) >= 1)
     def commit(self, message: str):
         """Commit the changes to the current branch"""
-        assert self.initialized, "stash: repository isn't initialized, use 'stash init'."
+        if not self.initialized:
+            print("stash: repository isn't initialized, use 'stash init'.")
+            return ""
 
         cmt_hash = self.stash_actions.commit(message, self.branch_name)
         if self.print_mode:
@@ -56,14 +60,18 @@ class Stash:
     @cli_parser.register_command(lambda params: len(params) == 0)
     def push(self):
         """Push the commits to the cloud"""
-        assert self.initialized, "stash: repository isn't initialized, use 'stash init'."
+        if not self.initialized:
+            print("stash: repository isn't initialized, use 'stash init'.")
+            return
 
         self.stash_actions.push("tcp:localhost:5000", self.branch_name)
 
     @cli_parser.register_command(lambda params: len(params) == 1)
     def add(self, filename: str):
         """Add a file to the index list"""
-        assert self.initialized, "stash: repository isn't initialized, use 'stash init'."
+        if not self.initialized:
+            print("stash: repository isn't initialized, use 'stash init'.")
+            return
 
         self.stash_actions.add(filename)
 
@@ -73,7 +81,9 @@ class Stash:
     @cli_parser.register_command(lambda params: len(params) >= 1)
     def checkout(self, branch_name: str, upsert=False):
         """Switch to a different branch, or create a new one"""
-        assert self.initialized, "stash: repository isn't initialized, use 'stash init'."
+        if not self.initialized:
+            print("stash: repository isn't initialized, use 'stash init'.")
+            return
 
         branch_exists = os.path.exists(os.path.join(self.repo_path, "refs/head", branch_name))
         if not branch_exists and not upsert:
