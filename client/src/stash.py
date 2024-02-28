@@ -17,7 +17,7 @@ class Stash:
         self.print_mode = print_mode_
 
         if not os.path.exists(self.folder_path):
-            raise FileNotFoundError("Couldn't find repository folder")
+            raise FileNotFoundError("stash: couldn't find repository folder.")
 
         self.repo_path = os.path.join(folder_path, ".stash")
         self.initialized = os.path.exists(self.repo_path)
@@ -39,7 +39,7 @@ class Stash:
         self.initialized = True
         self.current_branch_ref = "refs/head/main"
         if not self.print_mode:
-            print(f'initialized empty repository at {self.folder_path}')
+            print(f'stash: initialized empty repository at {self.folder_path}.')
 
     @cli_parser.register_command(lambda params: len(params) >= 1)
     def commit(self, message: str):
@@ -50,7 +50,7 @@ class Stash:
         if self.print_mode:
             return cmt_hash
 
-        print("Changes were committed")
+        print("stash: changes were committed")
         return cmt_hash
 
     @cli_parser.register_command(lambda params: len(params) == 0)
@@ -68,7 +68,7 @@ class Stash:
         self.stash_actions.add(filename)
 
         if not self.print_mode:
-            print(f"added {filename} to the stash repo")
+            print(f"stash: added {filename} to local repository.")
 
     @cli_parser.register_command(lambda params: len(params) >= 1)
     def checkout(self, branch_name: str, upsert=False):
@@ -77,7 +77,7 @@ class Stash:
 
         branch_exists = os.path.exists(os.path.join(self.repo_path, "refs/head", branch_name))
         if not branch_exists and not upsert:
-            print("Branch does not exist")
+            print("stash: branch does not exist.")
             return
 
         # Create the branch if not exists
@@ -91,4 +91,4 @@ class Stash:
         self.branch_name = branch_name
         self.current_branch_ref = f"refs/head/{branch_name}"
 
-        print(f"Switched branch, now in {branch_name}")
+        print(f"stash: switched branch, now in {branch_name}.")
