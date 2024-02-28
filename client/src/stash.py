@@ -11,9 +11,9 @@ from objects import read_file, write_file
 class Stash:
     """The main stash class"""
 
-    def __init__(self, folder_path, test_mode_=False):
+    def __init__(self, folder_path, print_mode_=False):
         self.folder_path = folder_path
-        self.test_mode = test_mode_
+        self.print_mode = print_mode_
 
         if not os.path.exists(self.folder_path):
             raise FileNotFoundError("Couldn't find repository folder")
@@ -34,7 +34,7 @@ class Stash:
         self.stash_actions.init()
         self.initialized = True
         self.current_branch_ref = "refs/head/main"
-        if not self.test_mode:
+        if not self.print_mode:
             print(f'initialized empty repository at {self.folder_path}')
 
     def commit(self, message: str):
@@ -42,7 +42,7 @@ class Stash:
         assert self.initialized, "Stash repository isn't initialized, use stash init to start"
 
         cmt_hash = self.stash_actions.commit(message, self.branch_name)
-        if self.test_mode:
+        if self.print_mode:
             return cmt_hash
 
         print("Changes were committed")
@@ -60,7 +60,7 @@ class Stash:
 
         self.stash_actions.add(filename)
 
-        if not self.test_mode:
+        if not self.print_mode:
             print(f"added {filename} to the stash repo")
 
     def checkout(self, branch_name: str, upsert=False):

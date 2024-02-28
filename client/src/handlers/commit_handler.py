@@ -88,7 +88,11 @@ class CommitHandler:
         return sha1, entries
 
     def extract_commit_data(self, sha1) -> Commit:
-        """Returns the commit data by hash and branch name"""
+        """
+        Extracts the commit data, given its hash value
+        :param sha1: commit hash value
+        :return: the commit data as Commit
+        """
         cmt = objects.resolve_object(self.full_repo, sha1).decode()
         lines = cmt.split("\n")
         del lines[2]
