@@ -30,9 +30,9 @@ class Stash:
             self.current_branch_ref = unmod_ref.split(" ")[1]  # ref: refs/head/main
             self.branch_name = self.current_branch_ref.split("/")[-1]
 
-    @cli_parser.register_command(lambda params: len(params) == 0)
+    @cli_parser.register_command(0)
     def init(self):
-        """Initialize the repository"""
+        """Create an empty Stash repository or reinitialize an existing one"""
         if self.initialized:
             print("stash: repository is initialized, use 'stash --help'.")
             return
@@ -43,9 +43,9 @@ class Stash:
         if not self.print_mode:
             print(f'stash: initialized empty repository at {self.folder_path}.')
 
-    @cli_parser.register_command(lambda params: len(params) >= 1)
+    @cli_parser.register_command(1)
     def commit(self, message: str):
-        """Commit the changes to the current branch"""
+        """Record changes to the repository"""
         if not self.initialized:
             print("stash: repository isn't initialized, use 'stash init'.")
             return ""
@@ -57,18 +57,18 @@ class Stash:
         print("stash: changes were committed")
         return cmt_hash
 
-    @cli_parser.register_command(lambda params: len(params) == 0)
+    @cli_parser.register_command(0)
     def push(self):
-        """Push the commits to the cloud"""
+        """Update remote refs along with associated objects"""
         if not self.initialized:
             print("stash: repository isn't initialized, use 'stash init'.")
             return
 
         self.stash_actions.push("tcp:localhost:5000", self.branch_name)
 
-    @cli_parser.register_command(lambda params: len(params) == 1)
+    @cli_parser.register_command(1)
     def add(self, filename: str):
-        """Add a file to the index list"""
+        """Add file contents to the index"""
         if not self.initialized:
             print("stash: repository isn't initialized, use 'stash init'.")
             return
@@ -78,9 +78,15 @@ class Stash:
         if not self.print_mode:
             print(f"stash: added {filename} to local repository.")
 
-    @cli_parser.register_command(lambda params: len(params) >= 1)
+    @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
-        """Switch to a different branch, or create a new one"""
+        """Switch branches or restore working tree files
+
+        Updates files in the working tree to match the version in the index or the specified tree.
+        If no pathspec was given,
+            git checkout will also update HEAD to set the specified branch as the current branch.
+
+        """
         if not self.initialized:
             print("stash: repository isn't initialized, use 'stash init'.")
             return

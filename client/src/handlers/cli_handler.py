@@ -20,25 +20,27 @@ class CLIHandler:
 
     def handle(self):
         """Handles the entire control flow"""
-        cmd, params = self.__parser.parse_args()
+        cmd, params, flags = self.__parser.parse_args()
         av_cmds = self.get_available_commands()
 
+        if cmd == "help":
+            self.__parser.print_help_message(params[0] if len(params) >= 1 else None)
+            return
+
         if cmd not in av_cmds:
-            print(f"stash: '{cmd}' is not a stash command. See 'stash --help'.")
+            print(f"stash: '{cmd}' is not a stash command. See 'stash help'.")
+            return
+
+        if av_cmds.get(cmd)[0] != len(params):
+            print(f"stash: '{cmd}' is supposed to receive {av_cmds.get(cmd)} additional parameters,"
+                  f" but got {len(params)} instead. See 'stash --help'.")
             return
 
         if cmd == "init":
-            if not av_cmds.get(cmd)(params):
-                print(f"stash: '{cmd}' supposed to receive 0 additional parameters,"
-                      f" but got {len(params)}. See 'stash --help'.")
-                return
             self.__stash.init()
-            return
 
         if cmd == "commit":
-            if not av_cmds.get(cmd)(params):
-                print(f"stash: '{cmd}' supposed to receive 0 additional parameters,"
-                      f" but got {len(params)}. See 'stash --help'.")
-                return
-            self.__stash.commit(" ".join(params))
-            return
+            self.__stash.commit(params[0])
+
+        if cmd == "checkout":
+            self.__stash.checkout(params[0], flags.get("b"))
