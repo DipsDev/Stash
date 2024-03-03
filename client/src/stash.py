@@ -34,7 +34,7 @@ class Stash:
     def init(self):
         """Create an empty Stash repository or reinitialize an existing one"""
         if self.initialized:
-            print("stash: repository is initialized, use 'stash --help'.")
+            print("stash: repository is initialized, use 'stash help'.")
             return
 
         self.stash_actions.init()

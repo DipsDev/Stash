@@ -50,6 +50,9 @@ class CLIParser:
 
     def parse_args(self):
         """Parses the arguments and returns"""
+        if len(sys.argv) == 1:
+            print("stash: not enough parameters. See 'stash help'.")
+            sys.exit(1)
         del sys.argv[0]
         cmd = sys.argv[0]
 

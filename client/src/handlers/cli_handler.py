@@ -43,4 +43,10 @@ class CLIHandler:
             self.__stash.commit(params[0])
 
         if cmd == "checkout":
-            self.__stash.checkout(params[0], flags.get("b"))
+            self.__stash.checkout(params[0], flags.get("b", False))
+
+        if cmd == "add":
+            self.__stash.add(params[0])
+
+        if cmd == "push":
+            self.__stash.push()

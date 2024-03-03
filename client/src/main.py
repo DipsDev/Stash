@@ -4,6 +4,7 @@ Module that represents a main
 
 import handlers.cli_handler
 
+
 def main():
     """
 

@@ -118,5 +118,10 @@ class Actions:
         assert commit_data is not None
 
         _tree = objects.resolve_object(self.full_repo, commit_data.get_hash())
+
+        # fetch the current commit from the server
+        # find_diff between the current local version and remote version
+        # send the diff files
+
         print("pushing commit ->", commit_data.get_message())
         print(f"to {connection_url}")
