@@ -117,11 +117,10 @@ class Actions:
         commit_data: Commit = self.commit_handler.extract_commit_data(current_commit)
         assert commit_data is not None
 
-        _tree = objects.resolve_object(self.full_repo, commit_data.get_hash())
-
         # fetch the current commit from the server
         # find_diff between the current local version and remote version
         # send the diff files
 
+        print(self.commit_handler.find_diff(commit_data.get_parent_hash(), current_commit))
         print("pushing commit ->", commit_data.get_message())
         print(f"to {connection_url}")

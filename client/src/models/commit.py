@@ -22,7 +22,7 @@ class Commit:
         """get commit's message"""
         return self.message
 
-    def get_hash(self):
+    def get_tree_hash(self):
         """get commit's hash"""
         return self.hash
 

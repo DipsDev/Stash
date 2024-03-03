@@ -18,12 +18,12 @@ class CommitHandler:
         self.full_repo = full_repo
         self.repo = repo
 
-    def find_diff(self, commit1_sha, commit2_sha):
+    def find_diff(self, commit1_sha: str, commit2_sha: str):
         """Finds the diff between two commits. given their hashes"""
         cmt1_data = self.extract_commit_data(commit1_sha)
         cmt2_data = self.extract_commit_data(commit2_sha)
 
-        return self._find_tree_diffs(cmt1_data.get_hash(), cmt2_data.get_hash())
+        return self._find_tree_diffs(cmt1_data.get_tree_hash(), cmt2_data.get_tree_hash())
 
     def _find_tree_diffs(self, h1: str, h2: str):
         """Returns the diff between trees"""
@@ -85,6 +85,7 @@ class CommitHandler:
             final_str += f"{i.get_type()} {i.get_hash()} {i.get_path()}\n"
 
         sha1 = objects.hash_object(self.repo, final_str.encode(), type_="tree")
+
         return sha1, entries
 
     def extract_commit_data(self, sha1) -> Commit:
@@ -98,7 +99,7 @@ class CommitHandler:
         del lines[2]
 
         assert lines[0][0:6] == "parent"
-        parent_hash = lines[0][8::]
+        parent_hash = lines[0][7::]
 
         assert lines[1][0:4] == "tree"
         tree_hash = lines[1][5::]
@@ -118,8 +119,7 @@ class CommitHandler:
         tree_sha, _tree = self.create_tree(indices, current_=self.repo)
 
         # read the parent file
-        parent = read_file(os.path.join(self.full_repo, "refs/head",
-                                        branch_name), binary_=False)
+        parent = self.get_head_commit(branch_name)
 
         cmt = Commit(message, tree_sha, parent)
         sha1 = objects.hash_object(self.repo, str(cmt).encode(), type_="commit")
@@ -127,5 +127,6 @@ class CommitHandler:
         # save the new tree to the current commit
         write_file(os.path.join(self.full_repo, "refs/head",
                                 branch_name), sha1, binary_=False)
-
+        print("parent:", parent)
+        print("created commit", sha1)
         return sha1
