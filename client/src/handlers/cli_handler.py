@@ -33,7 +33,7 @@ class CLIHandler:
 
         if av_cmds.get(cmd)[0] != len(params):
             print(f"stash: '{cmd}' is supposed to receive {av_cmds.get(cmd)} additional parameters,"
-                  f" but got {len(params)} instead. See 'stash --help'.")
+                  f" but got {len(params)} instead. See 'stash help'.")
             return
 
         if cmd == "init":
