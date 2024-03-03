@@ -120,7 +120,5 @@ class Actions:
         # fetch the current commit from the server
         # find_diff between the current local version and remote version
         # send the diff files
-
-        print(self.commit_handler.find_diff(commit_data.get_parent_hash(), current_commit))
         print("pushing commit ->", commit_data.get_message())
         print(f"to {connection_url}")

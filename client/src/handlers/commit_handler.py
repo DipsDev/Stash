@@ -127,6 +127,5 @@ class CommitHandler:
         # save the new tree to the current commit
         write_file(os.path.join(self.full_repo, "refs/head",
                                 branch_name), sha1, binary_=False)
-        print("parent:", parent)
-        print("created commit", sha1)
+
         return sha1
