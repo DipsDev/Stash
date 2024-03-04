@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stash</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <style>
+  * {
+        font-family: "Source Sans 3", sans-serif;
+    }
+  </style>
+  </head>
+  <body>
+    <nav class="bg-[#367FA9] px-8 py-3 flex flex-row items-center justify-between">
+        <h1 class="text-white text-xl font-bold">Stash</h1>
+        <button class="text-white">Sign in</button>
+    </nav>
+
+    <div class=”app”>
+      {% block content %}
+      {% endblock %}
+    </div>
+  </body>
+</html>
