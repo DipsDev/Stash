@@ -13,14 +13,22 @@
   </style>
   </head>
   <body>
-    <nav class="bg-[#367FA9] px-8 py-3 flex flex-row items-center justify-between">
+    <nav class="bg-[#367FA9] px-8 py-3 flex flex-row items-center justify-between fixed w-full">
         <h1 class="text-white text-xl font-bold">Stash</h1>
         <button class="text-white">Sign in</button>
     </nav>
 
-    <div class=”app”>
-      {% block content %}
-      {% endblock %}
-    </div>
+    <main class="flex flex-row items-start justify-start h-screen">
+        <div class="bg-[#222D32] py-3 px-5 text-white w-[170px] h-full">
+            <div class="mt-14">
+                {% block sidebar %}
+                {% endblock %}
+            </div>
+        </div>
+        <div class="mt-14">
+                {% block content %}
+                {% endblock %}
+        </div>
+    </main>
   </body>
 </html>

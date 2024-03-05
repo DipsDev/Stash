@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% macro tab_link(endpoint, name) %}
+    {% if request.endpoint.endswith(endpoint) %}
+        <li class="active"><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+    {% else %}
+        <li><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+<ul class="flex-row flex gap-3 text-[#6B9DCA]">
+    {{ tab_link("news", "News feed") }}
+    {{ tab_link("repos", "Repositories") }}
+</ul>
+<div class="w-full h-1 bg-white border-t border-1"></div>
+{% endblock %}
+
+
+{% block sidebar %}
+<ol>
+    <li>root/test</li>
+    <li>root/test</li>
+    <li>root/test</li>
+    <li>root/test</li>
+    <li>root/test</li>
+</ol>
+{% endblock %}
