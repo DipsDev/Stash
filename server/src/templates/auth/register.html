@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="post" action="{{ url_for('auth.register_user') }}" class="flex flex-col items-center justify-center w-full h-full mt-10">
+
+    <div class="flex flex-col justify-center items-center border w-[350px] rounded">
+        <h3 class="bg-[#F5F5F5] w-full text-lg px-3 py-3 font-semibold">Register</h3>
+        <div class="px-3 py-2">
+            <label class="font-semibold" for="user_name">Username:</label>
+            <input id="user_name" name="username" type="text" class="py-2 px-4 w-full border my-1">
+            <label class="font-semibold" for="pass">Password:</label>
+            <input id="pass" name="password" type="text" class="py-2 px-4 w-full border my-1">
+            <label class="font-semibold" for="rep_pass">Repeat password:</label>
+            <input id="rep_pass" name="rep_password" type="text" class="py-2 px-4 w-full border mt-1">
+            <input type="submit" value="Register" class="w-full text-center bg-[#00A65A] py-2 mt-3 text-white rounded hover:cursor-pointer hover:bg-green-700">
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+

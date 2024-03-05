@@ -14,8 +14,8 @@
   </head>
   <body>
     <nav class="bg-[#367FA9] px-8 py-3 flex flex-row items-center justify-between fixed w-full">
-        <h1 class="text-white text-xl font-bold">Stash</h1>
-        <button class="text-white">Sign in</button>
+        <a href="{{ url_for('landing_page') }}" class="text-white text-xl font-bold">Stash</a>
+        <a href="{{ url_for('auth.register_user') }}" class="text-white">Sign in</a>
     </nav>
 
     <main class="flex flex-row items-start justify-start h-screen">
@@ -25,7 +25,7 @@
                 {% endblock %}
             </div>
         </div>
-        <div class="mt-14">
+        <div class="mt-14 w-full">
                 {% block content %}
                 {% endblock %}
         </div>
