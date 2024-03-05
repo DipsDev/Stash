@@ -6,6 +6,9 @@
     <div class="flex flex-col justify-center items-center border w-[350px] rounded">
         <h3 class="bg-[#F5F5F5] w-full text-lg px-3 py-3 font-semibold">Sign In</h3>
         <div class="px-3 py-2">
+            {% for message in get_flashed_messages() %}
+                <p class="text-red-600 mb-2">{{ message }}</p>
+            {% endfor %}
             <label class="font-semibold" for="user_name">Username:</label>
             <input id="user_name" name="username" type="text" class="py-2 px-4 w-full border my-1">
             <label class="font-semibold" for="pass">Password:</label>

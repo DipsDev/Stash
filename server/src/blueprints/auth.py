@@ -1,8 +1,12 @@
 """
 Module
 """
-from flask import Blueprint, render_template, session, request
+from flask import Blueprint, render_template, request, flash
 import bcrypt
+from sqlalchemy import select
+
+from db.database import db
+from db.models import User
 
 auth = Blueprint("auth", __name__)
 
@@ -29,7 +33,11 @@ def login_user():
     password = request.form.get("password")
     username = request.form.get("username")
 
-    if bcrypt.checkpw(bytes(request.form.get("password"), encoding="utf-8"), users.get(1).get("password")):
-        return "OK"
-    return "NOT REQUESTED"
+    if not password or not username:
+        flash("Invalid credentials, please make sure the credentials are valid.")
+        return render_template("auth/login.html")
+
+    user = db.session.execute(select(User).where(User.username == username)).all()
+    return user
+
 
