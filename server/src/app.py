@@ -1,12 +1,18 @@
+import os
+
 from flask import Flask, render_template
 from db.database import db
-
+from dotenv import load_dotenv
+import db.models as models
 from blueprints.auth import auth
 from blueprints.stash_api import stash_api
 
+
+load_dotenv()
+
 app = Flask(__name__)
 
-app.secret_key = "62tTuCMjXgCkPjw/B2AzvWLDe5Dz8UnonnD0TQnHG9jDxybe4Loo6uHz/jEckm/O"
+app.secret_key = os.getenv("SECRET_KEY")
 
 # Database related config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -15,6 +21,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 app.register_blueprint(stash_api, url_prefix="/stash")
 app.register_blueprint(auth, url_prefix="/auth")
 db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 
 @app.route("/")
