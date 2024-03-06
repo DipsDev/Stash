@@ -45,28 +45,26 @@ def register_user():
     return render_template("auth/register.html", form=form)
 
 
+class LoginForm(FlaskForm):
+    username = StringField("username", validators=[DataRequired("Username must have a value.")])
+    password = StringField("password", validators=[DataRequired("Password must have a value.")])
+
+    def validate_username(self, field):
+        if db.session.execute(select(User).where(User.username == field.data)).one_or_none() is None:
+            raise ValidationError("Username or password are invalid.")
+
+    def validate_password(self, field):
+        user = db.session.execute(select(User).where(User.username == field.data)).one_or_none()
+        if not bcrypt.checkpw(bytes(field.data, encoding="utf-8"), user[0].password):
+            raise ValidationError("Username or password are invalid.")
+
+
 @auth.route("/login", methods=['POST', 'GET'])
 def login_user():
     """Route responsible for handling user login"""
-    if request.method == "GET":
-        return render_template("auth/login.html")
+    form = LoginForm()
 
-    password = request.form.get("password")
-    username = request.form.get("username")
+    if form.validate_on_submit():
+        return redirect(url_for("landing_page"))
 
-    if not password or not username:
-        flash("Invalid credentials, please make sure all credentials are valid.")
-        return render_template("auth/login.html")
-
-    user = db.session.execute(select(User).where(User.username == username)).one_or_none()
-    if user is None:
-        flash("Username or password are invalid.")
-        return render_template("auth/login.html")
-
-    print(user)
-    is_same = bcrypt.checkpw(bytes(password, encoding="utf-8"), user[0].password)
-    if not is_same:
-        flash("Username or pasword are invalid.")
-        return render_template("auth/login.html")
-
-    return redirect(url_for("landing_page"))
+    return render_template("auth/login.html", form=form)
