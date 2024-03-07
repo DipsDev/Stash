@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="post" action="{{ url_for('auth.register_user') }}" class="flex flex-col items-center justify-center w-full h-full mt-10">
+<form method="post" action="{{ url_for('auth.register_route') }}" class="flex flex-col items-center justify-center w-full h-full mt-10">
 
     <div class="flex flex-col justify-center items-center border w-[350px] rounded">
         <h3 class="bg-[#F5F5F5] w-full text-lg px-3 py-3 font-semibold">Register</h3>
         <div class="px-3 py-2">
-            {% for message in get_flashed_messages() %}
-                <p class="text-red-600 mb-2">{{ message }}</p>
-            {% endfor %}
+            <div class="mb-3 text-red-600">
+                {% for message in form.username.errors + form.password.errors + form.rep_password.errors %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+            {{ form.csrf_token }}
             <label class="font-semibold" for="user_name">Username:</label>
             <input id="user_name" name="username" type="text" class="py-2 px-4 w-full border my-1">
             <label class="font-semibold" for="pass">Password:</label>

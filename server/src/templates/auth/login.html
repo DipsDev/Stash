@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="post" action="{{ url_for('auth.login_user') }}" class="flex flex-col items-center justify-center w-full h-full mt-10">
+<form method="post" action="{{ url_for('auth.login_route') }}" class="flex flex-col items-center justify-center w-full h-full mt-10">
 
     <div class="flex flex-col justify-center items-center border w-[350px] rounded">
         <h3 class="bg-[#F5F5F5] w-full text-lg px-3 py-3 font-semibold">Sign In</h3>
         <div class="px-3 py-2">
             <div class="mb-3 text-red-600">
                 {% for message in form.username.errors + form.password.errors %}
-                <p>{{ message }}</p>
+                    <p>{{ message }}</p>
                 {% endfor %}
             </div>
             {{ form.csrf_token }}

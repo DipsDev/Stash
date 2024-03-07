@@ -15,7 +15,12 @@
   <body>
     <nav class="bg-[#367FA9] px-8 py-3 flex flex-row items-center justify-between fixed w-full">
         <a href="{{ url_for('landing_page') }}" class="text-white text-xl font-bold">Stash</a>
-        <a href="{{ url_for('auth.login_user') }}" class="text-white">Sign in</a>
+        {% if current_user.is_authenticated %}
+            <p>{{ current_user.username }}</p>
+        {% else %}
+            <a href="{{ url_for('auth.login_route') }}" class="text-white">Sign in</a>
+        {% endif %}
+
     </nav>
 
     <main class="flex flex-row items-start justify-start h-screen">
