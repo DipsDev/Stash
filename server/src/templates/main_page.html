@@ -10,7 +10,7 @@
 
 {% block content %}
 <ul class="flex-row flex gap-3 text-[#6B9DCA]">
-    <h2>Hello</h2>
+    <li>Hello</li>
 </ul>
 <div class="w-full h-1 bg-white border-t border-1"></div>
 {% endblock %}
@@ -18,10 +18,8 @@
 
 {% block sidebar %}
 <ol>
-    <li>root/test</li>
-    <li>root/test</li>
-    <li>root/test</li>
-    <li>root/test</li>
-    <li>root/test</li>
+    {% for repo in repos %}
+        <li>root/test</li>
+    {% endfor %}
 </ol>
 {% endblock %}

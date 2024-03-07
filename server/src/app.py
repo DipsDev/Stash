@@ -1,6 +1,8 @@
 import os
 
 from flask import Flask, render_template
+from flask_login import current_user
+from sqlalchemy import Join, select
 
 from db.database import db
 from dotenv import load_dotenv
@@ -40,7 +42,11 @@ app.register_blueprint(auth, url_prefix="/auth")
 @app.route("/")
 def landing_page():
     """Main page"""
-    return render_template("main_page.html")
+    user_repos = []
+    if current_user.is_authenticated:
+        user_repos = db.session.execute(select(models.User)
+                                        .where(models.User.id == current_user.id).join(models.Repository)).all()
+    return render_template("main_page.html", repos=user_repos)
 
 
 if __name__ == '__main__':
