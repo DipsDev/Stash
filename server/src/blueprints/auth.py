@@ -1,11 +1,10 @@
 """
 Module
 """
-import sys
 
 from flask import Blueprint, render_template, redirect, url_for
 import bcrypt
-from flask_login import current_user, login_user, logout_user
+from flask_login import login_user, logout_user
 from sqlalchemy import select
 import uuid
 from flask_wtf import FlaskForm
