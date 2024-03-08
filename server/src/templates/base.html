@@ -10,26 +10,64 @@
       * {
             font-family: "Source Sans 3", sans-serif;
         }
-
-        @media (min-width: 768px) {
-          #main-sidebar {
-            transform: translateX("0px") !important
-          }
-        }
       </style>
       <script defer>
           var active = false;
-          function toggle_drawer() {
+
+          var user_menu_active = false;
+          var plus_sign_menu_active = false;
+          function toggle_drawer(state) {
+              if (state === false) {
+                  active = true;
+              }
+
               if (!active) {
                   document.getElementById("mobile-main-sidebar").style.transform = "translate(0px, 0px)";
                   document.getElementById("main-content").style.marginLeft = "230px"
                   active = true;
+
+                  toggle_user_menu(false)
+                  toggle_plus_sign_menu(false)
               } else {
                   document.getElementById("mobile-main-sidebar").style.transform = "translate(-230px, 0px)";
                   document.getElementById("main-content").style.marginLeft = "0px"
                   active = false;
               }
           }
+
+          function toggle_user_menu(state) {
+              if (state === false) {
+                  user_menu_active = true;
+              }
+                if (user_menu_active) {
+                    document.getElementById("user_menu").style.display = "none";
+                    user_menu_active = false;
+                }
+                  else {
+                    document.getElementById("user_menu").style.display = "flex";
+                    user_menu_active = true;
+                    toggle_plus_sign_menu(false)
+                    toggle_drawer(false)
+                }
+          }
+
+            function toggle_plus_sign_menu(state) {
+              if (state === false) {
+                  plus_sign_menu_active = true;
+              }
+                if (plus_sign_menu_active) {
+                    document.getElementById("plus_sign_menu").style.display = "none";
+                    plus_sign_menu_active = false;
+                }
+                  else {
+                    document.getElementById("plus_sign_menu").style.display = "flex";
+                    plus_sign_menu_active = true;
+                    toggle_user_menu(false)
+                    toggle_drawer(false)
+                }
+          }
+
+
 
           window.onresize = function() {
             if (window.innerWidth > 768) {
@@ -44,17 +82,32 @@
   <body>
     <nav class="md:bg-[#367FA9] flex flex-col md:flex-row items-center justify-start fixed w-full z-50">
         <a href="{{ url_for('landing_page') }}" class="bg-[#367FA9] w-full text-white text-xl font-bold p-3 text-center md:text-left">StashHub</a>
-        <div class="bg-[#3C8DBC] md:bg-transparent w-full flex flex-row-reverse justify-between items-center p-4">
+        <div class="bg-[#3C8DBC] md:bg-transparent w-full flex flex-row-reverse justify-between items-center">
 
             {% if current_user.is_authenticated %}
-                <p class="text-white">{{ current_user.username }}</p>
+                <div class="flex flex-row-reverse items-center justify-center text-black relative">
+                    <div>
+                        <a href="#" class="hover:bg-[#367FA9] px-4 pt-5 pb-4 text-sm" onclick="toggle_user_menu(null)">{{ current_user.username | e }}</a>
+                        <div id="user_menu" class="z-10 hidden bg-white absolute w-[160px] text-sm left-[-80px] top-[42px] flex-col items-start justify-center">
+                            <a class="px-3 py-2 border border-gray-200 w-full hover:bg-gray-100">Your profile</a>
+                            <a href="{{ url_for('auth.logout_route') }}" class="px-3 py-2 border border-t-none border-gray-200 w-full hover:bg-gray-100">Sign out</a>
+                        </div>
+                    </div>
+                    <div>
+                    <a href="#" class="text-2xl hover:bg-[#367FA9] px-4 pt-3 pb-2" onclick="toggle_plus_sign_menu(null)">+</a>
+                        <div id="plus_sign_menu" class="z-10 hidden bg-white absolute w-[160px] text-sm left-[-80px] top-[42px] flex-col items-start justify-center">
+                            <a class="px-3 py-2 border border-gray-200 w-full hover:bg-gray-100">New repository</a>
+                        </div>
+                    </div>
+                </div>
+
             {% else %}
-                <a href="{{ url_for('auth.login_route') }}" class="text-white text-sm">Sign in</a>
+                <a href="{{ url_for('auth.login_route') }}" class="text-white text-sm p-4 hover:bg-[#367FA9]">Sign in</a>
             {% endif %}
 
             {% if self.sidebar() | trim %}
-            <a href="#" class="md:hidden">
-                <svg viewBox="0 0 100 80" width="12" height="12" fill="white" onclick="toggle_drawer()">
+            <a href="#" class="md:hidden hover:bg-[#367FA9] h-full px-4 pb-5 pt-5" onclick="toggle_drawer()">
+                <svg viewBox="0 0 100 80" width="13" height="13" fill="white">
                   <rect width="100" height="20" rx="10"></rect>
                   <rect y="35" width="100" height="20" rx="10"></rect>
                   <rect y="70" width="100" height="20" rx="10"></rect>
@@ -68,23 +121,23 @@
 
 
 
-    <main class="flex flex-col md:flex-row items-start justify-start w-full h-screen pt-[95px] md:pt-[50px]">
+    <main class="flex flex-col md:flex-row items-start justify-start w-full h-screen pt-[90px] md:pt-[50px]">
         <div class="w-full h-full relative">
                 <div id="main-content" class="w-full h-full flex flex-row justify-start items-start" style="transition: ease-in-out 0.4s">
-                    {% if self.sidebar() | trim %}
+                    {% if self.sidebar() | trim -%}
                     <div class="w-[230px] bg-[#222D32] text-white hidden md:block h-full">
                         {{ self.sidebar() }}
                     </div>
-                    {% endif %}
+                    {%- endif %}
 
-                    {% block content %}
-                    {% endblock %}
+                    {% block content required -%}
+                    {%- endblock %}
 
                 </div>
 
                 <div id="mobile-main-sidebar" class="z-10 absolute top-0 left-0 bg-[#222D32] h-full w-[230px] text-white md:hidden" style="transition: ease-in-out 0.4s; transform: translateX(-230px)">
-                    {% block sidebar %}
-                    {% endblock %}
+                    {% block sidebar -%}
+                    {%- endblock %}
                 </div>
         </div>
     </main>
