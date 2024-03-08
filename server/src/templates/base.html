@@ -14,7 +14,7 @@
   </head>
   <body>
     <nav class="bg-[#367FA9] px-8 py-3 flex flex-row items-center justify-between fixed w-full">
-        <a href="{{ url_for('landing_page') }}" class="text-white text-xl font-bold">Stash</a>
+        <a href="{{ url_for('landing_page') }}" class="text-white text-xl font-bold">StashHub</a>
         {% if current_user.is_authenticated %}
             <p class="text-white">{{ current_user.username }}</p>
         {% else %}
