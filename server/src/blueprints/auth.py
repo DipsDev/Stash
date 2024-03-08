@@ -9,7 +9,7 @@ from sqlalchemy import select
 import uuid
 from flask_wtf import FlaskForm
 from wtforms import StringField
-from wtforms.validators import DataRequired, EqualTo, ValidationError
+from wtforms.validators import DataRequired, EqualTo, ValidationError, Length
 
 from db.database import db
 from db.models import User
@@ -18,7 +18,8 @@ auth = Blueprint("auth", __name__)
 
 
 class RegisterForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired("Username should have a value.")])
+    username = StringField('username', validators=[DataRequired("Username should have a value."),
+                                                   Length(3, 12, "Username must be between 3-12 characters.")])
     password = StringField('password', validators=[DataRequired("Password should have a value.")])
     rep_password = StringField('rep_password',
                                validators=[DataRequired("Repeated password should have a value."),
