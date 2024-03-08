@@ -1,3 +1,6 @@
+"""
+Module that handles all api related actions
+"""
 from flask import Blueprint
 
 stash_api = Blueprint("stash_api", __name__)
