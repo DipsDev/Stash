@@ -4,6 +4,7 @@ from flask import Flask, render_template
 from flask_login import current_user
 from sqlalchemy import Join, select
 
+from blueprints.repos import repo
 from db.database import db
 from dotenv import load_dotenv
 import db.models as models
@@ -37,6 +38,7 @@ def load_user(user_id):
 # Routes related config
 app.register_blueprint(stash_api, url_prefix="/stash")
 app.register_blueprint(auth, url_prefix="/auth")
+app.register_blueprint(repo, url_prefix="/repo")
 
 
 @app.route("/")

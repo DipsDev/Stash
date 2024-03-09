@@ -6,6 +6,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+      {% block head -%}
+      {%- endblock %}
       <style>
       * {
             font-family: "Source Sans 3", sans-serif;
@@ -82,7 +84,7 @@
   <body>
     <nav class="md:bg-[#367FA9] flex flex-col md:flex-row items-center justify-start fixed w-full z-50">
         <a href="{{ url_for('landing_page') }}" class="bg-[#367FA9] w-full text-white text-xl font-bold p-3 text-center md:text-left">StashHub</a>
-        <div class="bg-[#3C8DBC] md:bg-transparent w-full flex flex-row-reverse justify-between items-center">
+        <div class="bg-[#3C8DBC] md:bg-transparent w-full flex flex-row-reverse justify-between items-center min-h-[50px]">
 
             {% if current_user.is_authenticated %}
                 <div class="flex flex-row-reverse items-center justify-center text-black relative">
@@ -96,7 +98,7 @@
                     <div>
                     <a href="#" class="text-2xl hover:bg-[#367FA9] px-4 pt-3 pb-2" onclick="toggle_plus_sign_menu(null)">+</a>
                         <div id="plus_sign_menu" class="z-10 hidden bg-white absolute w-[160px] text-sm left-[-80px] top-[42px] flex-col items-start justify-center">
-                            <a class="px-3 py-2 border border-gray-200 w-full hover:bg-gray-100">New repository</a>
+                            <a href="{{ url_for('repo.new') }}" class="px-3 py-2 border border-gray-200 w-full hover:bg-gray-100">New repository</a>
                         </div>
                     </div>
                 </div>
