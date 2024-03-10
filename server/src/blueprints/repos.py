@@ -1,24 +1,25 @@
 """
 Module that handles creating, viewing and editing repositories
 """
-from flask import Blueprint, render_template
+import hashlib
+
+from flask import Blueprint, render_template, redirect, url_for
 from flask_wtf import FlaskForm
 from sqlalchemy import select
 from wtforms import StringField, RadioField, ValidationError
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms.validators import DataRequired, Optional
+from flask_login import login_required, current_user
 import re
 
 from db.database import db
 from db.models import Repository
+from db.file_system import file_system
 
 repo = Blueprint("repo", __name__)
 
 
 class CreateRepositoryForm(FlaskForm):
-    repository_name = StringField('repository_name', validators=[DataRequired("Repository name should have a value."),
-                                                                 Length(3, 12,
-                                                                        "Repository name must be between 3-12 "
-                                                                        "characters.")])
+    repository_name = StringField('repository_name', validators=[DataRequired("Repository name should have a value.")])
     description = StringField('description', validators=[Optional(True)])
 
     initial_value = RadioField('initial_value',
@@ -33,7 +34,7 @@ class CreateRepositoryForm(FlaskForm):
         if exist_repo:
             raise ValidationError("Repository name is already in use. Please choose another.")
         if not re.compile(r'^[A-Za-z0-9_.-]+$').match(field.data):
-            raise ValidationError("Invalid repository name was chosen. Please use another one.")
+            raise ValidationError("Repository name cannot contain spaces and special characters (other then a '-').")
 
     def validate_source_id(self, field):
         if self.initial_value.data != "clone":
@@ -48,9 +49,23 @@ class CreateRepositoryForm(FlaskForm):
 
 
 @repo.route("/new", methods=['POST', 'GET'])
+@login_required
 def new():
     """Route responsible for rendering the repo creation page"""
     form = CreateRepositoryForm()
     if form.validate_on_submit():
-        return render_template("landing_page")
+        created_repo_id = hashlib.sha1(f"{form.repository_name.data}_repository".encode()).hexdigest()
+        created_repo = Repository(id=created_repo_id, name=form.repository_name.data,
+                                  description=form.description.data, user_id=current_user.id)
+
+        db.session.add(created_repo)
+        db.session.commit()
+        file_system.allocate_repository(created_repo_id)
+        return redirect(url_for(".view_repo", username=current_user.username, repo_name=form.repository_name.data))
     return render_template("repo/new.html", form=form)
+
+
+@repo.route("/<username>/<repo_name>")
+def view_repo(username: str, repo_name: str):
+    """Route responsible for viewing a user's repo"""
+    return username + " " + repo_name
