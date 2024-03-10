@@ -1,4 +1,5 @@
 import os
+import zlib
 
 
 def write_file(path, data, binary_=True):
@@ -19,14 +20,50 @@ def read_file(path, binary_=True) -> bytes or str:
         return f.read()
 
 
+def resolve_object(main_folder, repo_id, sha1) -> bytes:
+    """Returns the original content of an object"""
+    path = resolve_object_location(main_folder, repo_id, sha1)
+    return zlib.decompress(bytes(read_file(path, binary_=True)))
+
+
+def resolve_object_location(full_repo,repo_id, obj_hash):
+    """resolves an object hash to its path on the disk"""
+    return os.path.join(full_repo, repo_id, "objects", obj_hash[:2], obj_hash[2:])
+
+
 class FileSystem:
 
     def __init__(self, storage_path: str):
         self.main_folder = storage_path
 
-    def get_repo_branches(self, repo_id: str) -> list:
-        """Gets the branches availiable in a repository"""
+    def get_repo_branches(self, repo_id: str) -> list[str]:
+        """Gets the branches available in a repository"""
         return os.listdir(os.path.join(self.main_folder, repo_id, "refs", "head"))
+
+    def extract_commit_data(self, repo_id: str, sha1) -> tuple:
+        """Extracts the commit data, given its hash value"""
+        cmt = resolve_object(self.main_folder, repo_id, sha1).decode()
+        lines = cmt.split("\n")
+        del lines[2]
+
+        assert lines[0][0:6] == "parent"
+        parent_hash = lines[0][7::]
+
+        assert lines[1][0:4] == "tree"
+        tree_hash = lines[1][5::]
+
+        message = lines[2]
+
+        return message, tree_hash, parent_hash
+
+    def get_current_commit_files(self, repo_id: str, branch_name="main") -> list[str]:
+        """Returns a list of the current commit file names"""
+        last_commit = read_file(os.path.join(self.main_folder, repo_id, "refs/head", branch_name), binary_=False)
+        if last_commit == "":
+            return []
+
+        message, tree_hash, parent = self.extract_commit_data(repo_id, last_commit)
+        raise NotImplementedError()
 
     def allocate_repository(self, repo_id: str):
         """Allocates a new repository in the filesystem"""
