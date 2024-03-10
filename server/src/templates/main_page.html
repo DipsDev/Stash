@@ -17,14 +17,13 @@
 
 
 {% block sidebar %}
-<ol class="mt-10 p-3">
-    <li>root/test</li>
-    <li>root/test</li>
-    <li>root/test</li>
-    <li>root/test</li>
-    <li>root/test</li>
-    {% for repo in repos %}
-        <li>root/test</li>
-    {% endfor %}
+<ol class="flex flex-col items-start justify-center">
+    {% for repo in repos -%}
+        <li class="text-gray-400 w-full">
+            <a class="block px-3 py-3 hover:bg-[#1E282C] w-full" href="{{ url_for('repo.view_repo', username=current_user.username, repo_name=repo.name) }}">
+            {{ current_user.username }}/<span class="font-semibold text-gray-300 w-full">{{ repo.name }}</span>
+            </a>
+        </li>
+    {%- endfor %}
 </ol>
 {% endblock %}
