@@ -81,9 +81,6 @@ class Actions:
         # indices file, where file indexes are stored
         write_file(os.path.join(self.full_repo, "index", "d"), pickle.dumps({}))
 
-        # commit file, where commits are stored
-        write_file(os.path.join(self.full_repo, "refs/commit", "main"), pickle.dumps({}))
-
         # head file, where current commit hash is stored
         write_file(os.path.join(self.full_repo, "refs/head", "main"), "", binary_=False)
 
