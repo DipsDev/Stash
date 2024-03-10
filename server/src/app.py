@@ -46,8 +46,7 @@ def landing_page():
     """Main page"""
     user_repos = []
     if current_user.is_authenticated:
-        user_repos = db.session.execute(select(models.User)
-                                        .where(models.User.id == current_user.id).join(models.Repository)).all()
+        user_repos = models.Repository.query.where(models.Repository.user_id == current_user.id).all()
     return render_template("main_page.html", repos=user_repos)
 
 
