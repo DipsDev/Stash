@@ -98,8 +98,6 @@ class Stash:
 
         # Create the branch if not exists
         if not branch_exists and upsert:
-            write_file(os.path.join(self.repo_path, "refs", "commit", branch_name),
-                       pickle.dumps({}))
             write_file(os.path.join(self.repo_path, "refs", "head", branch_name), "", binary_=False)
 
         write_file(os.path.join(self.repo_path, "HEAD"),

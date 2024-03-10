@@ -74,7 +74,7 @@ class Actions:
         # create the .stash directory
         os.mkdir(self.full_repo)
         # create the required folders for the database
-        for name in ["objects", "index", "refs", "refs/head", "refs/commit"]:
+        for name in ["objects", "index", "refs", "refs/head"]:
             os.mkdir(os.path.join(self.full_repo, name))
 
         # create the required files
