@@ -36,7 +36,7 @@ def load_user(user_id):
 
 
 # Routes related config
-app.register_blueprint(stash_api, url_prefix="/stash")
+app.register_blueprint(stash_api, url_prefix="/")
 app.register_blueprint(auth, url_prefix="/auth")
 app.register_blueprint(repo, url_prefix="/")
 
