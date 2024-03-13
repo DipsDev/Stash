@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% macro tab_link(endpoint, name) %}
+    {% if request.endpoint.endswith(endpoint) %}
+        <li class="active"><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+    {% else %}
+        <li><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="flex flex-col items-start justify-center p-3 mt-5 md:mt-0">
+    <p class="text-[#3E6FB1] text-xl">{{ repo.user.username }} / <span class="font-semibold">{{ repo.name }}</span></p>
+
+    {% if files | length == 0 %}
+    <h2 class="text-3xl mt-5"><span class="font-semibold">Quick setup</span> - if you've done this kind of thing before</h2>
+    <p class="mt-2">via HTTP</p>
+    <div class="mt-7 w-full">
+        <h4 class="text-2xl mb-2">Create a new repository from the command line</h4>
+        <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
+            <code>touch README.md <br/></code>
+            <code>stash init <br/></code>
+            <code>stash add README.md <br/></code>
+            <code>git commit "first commit" <br/></code>
+            <code>git push</code>
+        </div>
+    </div>
+        <div class="mt-7 w-full">
+        <h4 class="text-2xl mb-2">Push an existing repository from the command line</h4>
+        <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
+            <code>git push</code>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+
+
+{% endblock %}
+
+
+{% block sidebar %}
+<ol class="flex flex-col items-start justify-center">
+    {% for item in ["Files", "Releases", "Settings"] -%}
+        <li class="text-gray-400 w-full">
+            <a class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
+            {{ item }}
+            </a>
+        </li>
+    {%- endfor %}
+</ol>
+{% endblock %}

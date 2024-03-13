@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 import re
 
 from db.database import db
-from db.models import Repository
+from db.models import Repository, User
 from db.file_system import file_system
 
 repo = Blueprint("repo", __name__)
@@ -68,4 +68,6 @@ def new():
 @repo.route("/<username>/<repo_name>")
 def view_repo(username: str, repo_name: str):
     """Route responsible for viewing a user's repo"""
-    return username + " " + repo_name
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
+    files = file_system.get_current_commit_files(current_repo.id, "main")
+    return render_template("repo/view.html", repo=current_repo, files=files)
