@@ -83,7 +83,7 @@
   </head>
   <body>
     <nav class="md:bg-[#3C8DBC] flex flex-col md:flex-row items-center justify-start fixed w-full z-50">
-        <a href="{{ url_for('landing_page') }}" class="bg-[#367FA9] w-full text-white text-xl font-bold p-3 text-center md:text-left">StashHub</a>
+        <a href="{{ url_for('landing_page') }}" class="bg-[#367FA9] md:bg-[#3C8DBC] w-full text-white text-xl font-bold p-3 text-center md:text-left">StashHub</a>
         <div class="bg-[#3C8DBC] md:bg-transparent w-full flex flex-row-reverse justify-between items-center min-h-[50px]">
 
             {% if current_user.is_authenticated %}
