@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 # Database related config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///services.sqlite'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db.init_app(app)
 with app.app_context():
     db.create_all()
