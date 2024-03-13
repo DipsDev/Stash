@@ -127,7 +127,7 @@
         <div class="w-full h-full relative">
                 <div id="main-content" class="w-full h-full flex flex-row justify-start items-start" style="transition: ease-in-out 0.4s">
                     {% if self.sidebar() | trim -%}
-                    <div class="w-[230px] bg-[#222D32] text-white hidden md:block h-full">
+                    <div class="min-w-[230px] max-w-[230px] bg-[#222D32] text-white hidden md:block h-full">
                         {{ self.sidebar() }}
                     </div>
                     {%- endif %}
