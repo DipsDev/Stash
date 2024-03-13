@@ -5,12 +5,12 @@ from flask_login import current_user
 from sqlalchemy import Join, select
 
 from blueprints.repos import repo
-from db.database import db
+from services.database import db
 from dotenv import load_dotenv
-import db.models as models
+import services.models as models
 from blueprints.auth import auth
 from blueprints.stash_api import stash_api
-from db.login import login_manager
+from services.login import login_manager
 
 load_dotenv()
 
@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 # Database related config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///services.sqlite'
 db.init_app(app)
 with app.app_context():
     db.create_all()

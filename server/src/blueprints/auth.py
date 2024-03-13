@@ -11,8 +11,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired, EqualTo, ValidationError, Length
 
-from db.database import db
-from db.models import User
+from services.database import db
+from services.models import User
 
 auth = Blueprint("auth", __name__)
 

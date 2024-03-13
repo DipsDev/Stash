@@ -11,9 +11,9 @@ from wtforms.validators import DataRequired, Optional
 from flask_login import login_required, current_user
 import re
 
-from db.database import db
-from db.models import Repository, User
-from db.file_system import file_system
+from services.database import db
+from services.models import Repository, User
+from services.file_system import file_system
 
 repo = Blueprint("repo", __name__)
 
