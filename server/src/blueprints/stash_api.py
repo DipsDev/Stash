@@ -3,12 +3,13 @@ Module that handles all api related actions
 """
 from functools import wraps
 
-from flask import Blueprint
+from flask import Blueprint, abort
 from flask_login import current_user
 
 from services.login import login_manager
 from services.models import Repository, User
 
+from services.file_system import file_system
 
 stash_api = Blueprint("stash_api", __name__)
 
@@ -41,6 +42,21 @@ def uses_repository(url: str, methods=None):
     return decorator
 
 
-@uses_repository('/<commit>/head')
-def current_head_commit(repo, commit):
-    return repo.user.id + " " + commit
+@uses_repository('/<branch>/head')
+def current_head_commit(repo, branch):
+    """Get the current head commit"""
+    head_cmt = file_system.get_head_commit(repo.id, branch)
+    if head_cmt is None:
+        abort(404)
+    return head_cmt
+
+
+@uses_repository("/objects/<s>/<c>")
+def get_server_object(repo: Repository, s: str, c: str):
+    """Fetch an object from the server"""
+    if len(s) != 2 or len(c) != 38:
+        abort(400)
+    obj = file_system.get_server_object(repo.id, s, c)
+    if obj is None:
+        abort(404)
+    return obj

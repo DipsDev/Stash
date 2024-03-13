@@ -26,7 +26,7 @@ def resolve_object(main_folder, repo_id, sha1) -> bytes:
     return zlib.decompress(bytes(read_file(path, binary_=True)))
 
 
-def resolve_object_location(full_repo,repo_id, obj_hash):
+def resolve_object_location(full_repo, repo_id, obj_hash):
     """resolves an object hash to its path on the disk"""
     return os.path.join(full_repo, repo_id, "objects", obj_hash[:2], obj_hash[2:])
 
@@ -36,9 +36,29 @@ class FileSystem:
     def __init__(self, storage_path: str):
         self.main_folder = storage_path
 
+    def get_server_object(self, repo_id: str, s: str, c: str):
+        """Fetch a server object from a remote repository"""
+        assert len(s) == 2
+        assert len(c) == 38
+        if not os.path.exists(os.path.join(self.main_folder, repo_id, s, c)):
+            return None
+
+        obj = resolve_object(self.main_folder, repo_id, f"{s}{c}")
+        return obj
+
+
+
     def get_repo_branches(self, repo_id: str) -> list[str]:
         """Gets the branches available in a repository"""
         return os.listdir(os.path.join(self.main_folder, repo_id, "refs", "head"))
+
+    def get_head_commit(self, repo_id: str, branch: str):
+        """Gets the current head commit"""
+        head_commit_path = os.path.join(self.main_folder, repo_id, "refs/head", branch)
+        if not os.path.exists(head_commit_path):
+            return None
+        cmt = read_file(head_commit_path, binary_=False)
+        return cmt
 
     def extract_commit_data(self, repo_id: str, sha1) -> tuple:
         """Extracts the commit data, given its hash value"""
