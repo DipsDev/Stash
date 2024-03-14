@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% macro key_view(description, key_id) %}
+        <li class="flex flex-row items-center justify-start gap-3">
+            <form action="{{ url_for('auth.revoke_key') }}" method="post" class="flex flex-row items-center justify-start gap-2">
+                {{ revoke_form.csrf_token }}
+                <input type="hidden" name="key_id" value="{{ key_id }}">
+                <p>{{ description }}</p>
+                <p class="blur-sm select-none">secret-key-goes-here</p>
+                <input type="submit" class="px-3 py-[1.3px] text-sm text-red-400 underline" value="Revoke" />
+            </form>
+        </li>
+{% endmacro %}
+
+{% block content %}
+<div class="p-3">
+    <h1 class="mt-5 text-3xl font-bold">Your Authentication Keys</h1>
+    <p class="text-lg">Manage your authentication keys: authentication keys allow you to push changes to stash servers.</p>
+    <h3 class="text-xl mt-10 font-semibold">Generate new authentication key</h3>
+    <form class="flex flex-row gap-3 items-center justify-start mt-2" method="post" action="{{ url_for('auth.keys') }}">
+        {{ form.csrf_token }}
+        <input required type="text" name="description" placeholder="Description" class="py-1 px-2 w-full border border-gray-300 my-1 outline-none focus:border-blue-500">
+        <input type="submit" value="Generate" class="w-1/4 text-center bg-[#00A65A] py-2 text-sm text-white rounded hover:cursor-pointer hover:bg-green-700">
+    </form>
+    {% if created_key %}
+    <div class="mt-5">
+        <div class="flex flex-row items-center justify-start gap-3">
+        <p>{{ created_key[0] }}</p>
+        <p class="italic">{{ created_key[1] }}</p>
+        </div>
+    <p>Copy the key and save it somewhere safe. the key will no longer be visible after a refresh.</p>
+    </div>
+    {% endif %}
+    <h3 class="mt-8 italic mb-3">Active Keys:</h3>
+    <ol class="list-style-none text-lg">
+        {% for v in auth_keys %}
+            {{ key_view(v.description, v.id) }}
+        {% endfor %}
+    </ol>
+</div>
+{% endblock %}

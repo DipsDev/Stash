@@ -1,10 +1,12 @@
 """
 Module that handles register and login
 """
+import secrets
+import sys
 
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, abort
 import bcrypt
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import select
 import uuid
 from flask_wtf import FlaskForm
@@ -12,7 +14,7 @@ from wtforms import StringField
 from wtforms.validators import DataRequired, EqualTo, ValidationError, Length
 
 from services.database import db
-from services.models import User
+from services.models import User, AuthenticationKey
 
 auth = Blueprint("auth", __name__)
 
@@ -84,3 +86,53 @@ def logout_route():
     """Logout user from the current session"""
     logout_user()
     return redirect(url_for(".login_route"))
+
+
+class GenerateKeyForm(FlaskForm):
+    description = StringField("description", validators=[DataRequired("Description must have a value.")])
+
+
+@auth.route("/keys", methods=['POST', 'GET'])
+@login_required
+def keys():
+    """See keys, create or revoke them"""
+    form = GenerateKeyForm()
+    revoke_form = RevokeKeyForm()
+
+    created_key = None
+
+    user_keys = db.session.query(AuthenticationKey.id, AuthenticationKey.description) \
+        .where(AuthenticationKey.user_id == current_user.id).all()
+
+    if form.validate_on_submit():
+        key = secrets.token_hex()
+        key_id = str(uuid.uuid4())
+        new_auth_key = AuthenticationKey(id=key_id, value=key, user_id=current_user.id, description=form.description.data)
+        db.session.add(new_auth_key)
+        db.session.commit()
+        created_key = (form.description.data, key)
+
+    return render_template("auth/keys.html", auth_keys=user_keys, form=form, revoke_form=revoke_form, created_key=created_key)
+
+
+class RevokeKeyForm(FlaskForm):
+    key_id = StringField('key_id', validators=[DataRequired()])
+
+
+@auth.route("/keys/revoke", methods=['POST'])
+@login_required
+def revoke_key():
+    """Revoke key. Used only for forms"""
+
+    form = RevokeKeyForm()
+    if form.validate_on_submit():
+        key = db.session.query(AuthenticationKey).filter(AuthenticationKey.id == form.key_id.data).one_or_404()
+        if key.user_id != current_user.id:
+            return abort(404)
+
+        db.session.delete(key)
+        db.session.commit()
+
+    return redirect(url_for(".keys"))
+
+
