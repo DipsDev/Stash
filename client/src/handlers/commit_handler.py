@@ -123,7 +123,7 @@ class CommitHandler:
                 if len(os.listdir(full_path)) == 0:
                     continue
                 new_sha1, new_entries = self.create_tree(files, path_length, full_path)
-                entries.append(Tree(full_path, new_sha1, new_entries))
+                entries.append(Tree(full_path[path_length+1::], new_sha1, new_entries))
 
         final_str = ""
         for i in entries:
