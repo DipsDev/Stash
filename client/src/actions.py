@@ -7,6 +7,7 @@ import zlib
 
 import objects
 from handlers.commit_handler import CommitHandler
+from handlers.remote_connection_handler import RemoteConnectionHandler
 from models.commit import Commit
 from objects import write_file, read_file, hash_object
 
@@ -48,11 +49,11 @@ class Actions:
 
     """
 
-    def __init__(self, repo: str):
+    def __init__(self, repo: str, remote_handler: RemoteConnectionHandler):
         self.repo = repo
         self.full_repo = os.path.join(self.repo, ".stash")
 
-        self.commit_handler = CommitHandler(self.repo, self.full_repo)
+        self.commit_handler = CommitHandler(self.repo, self.full_repo, remote_handler)
 
     def cat_file(self, hash_id):
         """Cats the content of a file by its hash"""
@@ -107,7 +108,7 @@ class Actions:
 
         return self.commit_handler.commit(message, branch_name)
 
-    def push(self, connection_url: str, branch_name: str):
+    def push(self, branch_name: str):
         """push changes to the cloud"""
 
         current_commit = self.commit_handler.get_head_commit(branch_name)
@@ -117,5 +118,5 @@ class Actions:
         # fetch the current commit from the server
         # find_diff between the current local version and remote version
         # send the diff files
-        print("pushing commit ->", commit_data.get_message())
-        print(f"to {connection_url}")
+        a = self.commit_handler.find_diff(current_commit, "", remote_=True)
+        print(a)

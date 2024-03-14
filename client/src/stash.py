@@ -2,10 +2,10 @@
 Main class
 """
 import os
-import pickle
 
 from actions import Actions
 from handlers import cli_parser
+from handlers.remote_connection_handler import RemoteConnectionHandler
 from objects import read_file, write_file
 
 
@@ -21,7 +21,8 @@ class Stash:
 
         self.repo_path = os.path.join(folder_path, ".stash")
         self.initialized = os.path.exists(self.repo_path)
-        self.stash_actions = Actions(folder_path)
+        self.remote_handler = RemoteConnectionHandler(url="http://localhost:5000/first-repo.stash")
+        self.stash_actions = Actions(folder_path, self.remote_handler)
 
         self.current_branch_ref = "refs/head/main"
         self.branch_name = "main"
@@ -64,7 +65,7 @@ class Stash:
             print("stash: repository isn't initialized, use 'stash init'.")
             return
 
-        self.stash_actions.push("tcp:localhost:5000", self.branch_name)
+        self.stash_actions.push(self.branch_name)
 
     @cli_parser.register_command(1)
     def add(self, filename: str):

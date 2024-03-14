@@ -3,11 +3,9 @@ Module that handles all api related actions
 """
 from functools import wraps
 
-from flask import Blueprint, abort
-from flask_login import current_user
+from flask import Blueprint, abort, request
 
-from services.login import login_manager
-from services.models import Repository, User
+from services.models import Repository, User, AuthenticationKey
 
 from services.file_system import file_system
 
@@ -21,16 +19,20 @@ def uses_repository(url: str, methods=None):
     def decorator(func):
         @wraps(func)
         def decorated_function(*args, **kwargs):
-
-            if not current_user.is_authenticated:
-                return login_manager.unauthorized()
+            auth_token = request.headers.get('Authorization')
+            if not auth_token:
+                return abort(401)
+            auth_token = auth_token.lstrip("Bearer ")
+            authenticated_key = AuthenticationKey.query.where(AuthenticationKey.value == auth_token).first()
+            if authenticated_key is None:
+                return abort(401)
 
             repo_name = kwargs.get("repo_name")
             kwargs.pop("repo_name")
 
             current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
-            if current_repo.user.id != current_user.id:
-                return login_manager.unauthorized()
+            if current_repo.user.id != authenticated_key.user_id:
+                return abort(401)
 
             return func(*args, **kwargs, repo=current_repo)
 

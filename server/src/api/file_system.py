@@ -40,13 +40,11 @@ class FileSystem:
         """Fetch a server object from a remote repository"""
         assert len(s) == 2
         assert len(c) == 38
-        if not os.path.exists(os.path.join(self.main_folder, repo_id, s, c)):
+        if not os.path.exists(os.path.join(self.main_folder, repo_id, "objects", s, c)):
             return None
 
         obj = resolve_object(self.main_folder, repo_id, f"{s}{c}")
         return obj
-
-
 
     def get_repo_branches(self, repo_id: str) -> list[str]:
         """Gets the branches available in a repository"""
