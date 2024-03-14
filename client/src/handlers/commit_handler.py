@@ -107,7 +107,7 @@ class CommitHandler:
         """Returns the head commit hash by branch name"""
         return read_file(os.path.join(self.full_repo, "refs/head", branch_name), binary_=False)
 
-    def create_tree(self, files: dict, current_):
+    def create_tree(self, files: dict, path_length, current_):
         """Creates a new commit tree"""
         entries = []
         for it in os.scandir(current_):
@@ -117,12 +117,12 @@ class CommitHandler:
             if it.is_file():
                 if full_path in files:
                     sha1 = objects.hash_object(self.repo, read_file(full_path))
-                    leaf = TreeNode(full_path, sha1)
+                    leaf = TreeNode(full_path[path_length+1::], sha1)
                     entries.append(leaf)
             else:
                 if len(os.listdir(full_path)) == 0:
                     continue
-                new_sha1, new_entries = self.create_tree(files, full_path)
+                new_sha1, new_entries = self.create_tree(files, path_length, full_path)
                 entries.append(Tree(full_path, new_sha1, new_entries))
 
         final_str = ""
@@ -161,7 +161,7 @@ class CommitHandler:
         indices = pickle.loads(read_file(index_path))
 
         # create the tree
-        tree_sha, _tree = self.create_tree(indices, current_=self.repo)
+        tree_sha, _tree = self.create_tree(indices, len(self.repo), current_=self.repo)
 
         # read the parent file
         parent = self.get_head_commit(branch_name)
