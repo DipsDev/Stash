@@ -69,5 +69,6 @@ def new():
 def view_repo(username: str, repo_name: str):
     """Route responsible for viewing a user's repo"""
     current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
-    files = file_system.get_current_commit_files(current_repo.id, "main")
-    return render_template("repo/view.html", repo=current_repo, files=files)
+    message, files = file_system.get_current_commit_files(current_repo.id, "main")
+    head_commit = file_system.get_head_commit(current_repo.id, "main")
+    return render_template("repo/view.html", repo=current_repo, files=files, last_commit=head_commit, commit_message=message)

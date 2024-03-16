@@ -54,6 +54,7 @@ class Actions:
         self.full_repo = os.path.join(self.repo, ".stash")
 
         self.commit_handler = CommitHandler(self.repo, self.full_repo, remote_handler)
+        self.remote_handler = remote_handler
 
     def cat_file(self, hash_id):
         """Cats the content of a file by its hash"""
@@ -118,5 +119,4 @@ class Actions:
         # fetch the current commit from the server
         # find_diff between the current local version and remote version
         # send the diff files
-        a = self.commit_handler.find_diff(current_commit, "", remote_=True)
-        print(a)
+        self.remote_handler.connect()
