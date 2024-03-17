@@ -6,9 +6,8 @@ from flask_login import current_user
 from blueprints.repos import repo
 from services.database import db
 from dotenv import load_dotenv
-import services.models as models
+import backend.models as models
 from blueprints.auth import auth
-from blueprints.stash_api import stash_api
 from services.login import login_manager
 
 load_dotenv()
@@ -18,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 # Database related config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../../../db.sqlite'
 db.init_app(app)
 with app.app_context():
     db.create_all()
@@ -34,8 +33,6 @@ def load_user(user_id):
     return user
 
 
-# Routes related config
-app.register_blueprint(stash_api, url_prefix="/")
 app.register_blueprint(auth, url_prefix="/auth")
 app.register_blueprint(repo, url_prefix="/")
 

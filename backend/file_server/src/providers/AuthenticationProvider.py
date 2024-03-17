@@ -1,8 +1,9 @@
+import bcrypt
 from sqlalchemy.orm import Session
 
-from backend.file_server.src.ClientThread import parse_pkt, create_pkt_line
 from backend.file_server.src.providers.EncryptionProvider import EncryptionProvider
-from services.models import User
+from globals import parse_pkt, create_pkt_line, ResponseCode
+from backend.models import User
 
 
 class AuthenticationProvider:
@@ -15,9 +16,22 @@ class AuthenticationProvider:
         """Authenticate user, uses recv"""
         login_command, data = parse_pkt(self.enc.decrypt_incoming_packet())
         if login_command != "stash-login":
-            self.conn.send(create_pkt_line("stash-error", "stash: Login credentials are invalid."))
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR.value, "stash: Unauthenticated")))
             self.conn.close()
             return
         username, password = data.split("@")
-        db_user = self.db_session.query(User.username == username).first()
-        print(db_user)
+
+        db_user = self.db_session.query(User).where(User.username == username).one_or_none()
+
+        if db_user is None:
+            self.conn.send(self.enc.encrypt_packet(
+                create_pkt_line(ResponseCode.ERROR.value, "stash: Login credentials are invalid")))
+            self.conn.close()
+            return
+
+        if not bcrypt.checkpw(password.encode(), db_user.password):
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR.value, "stash: Login "
+                                                                                             "credentials are "
+                                                                                             "invalid")))
+            self.conn.close()
+            return

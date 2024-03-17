@@ -1,5 +1,5 @@
-
 import socket
+import sys
 
 from handlers.encryption_handler import EncryptionHandler
 from models.commit import Commit
@@ -9,6 +9,12 @@ def create_pkt_line(command_name: str, data: str):
     """Encodes the data to pkt line format"""
     d = f"{command_name}\n{data}\n0000"
     return d.encode()
+
+
+def parse_pkt(data: str) -> (str, str):
+    """Parses the pkt line format to command name, data"""
+    d = data.split("\n")
+    return d[0], d[1]
 
 
 class RemoteConnectionHandler:
@@ -25,6 +31,11 @@ class RemoteConnectionHandler:
         self.handler.exchange_keys()
         login_info = input("stash: Provide your login details, separated by a @: ")
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", login_info)))
+
+        pkt_command, pkt_data = parse_pkt(self.handler.decrypt_incoming_packet())
+        if pkt_command == "stash-error":
+            print(pkt_data)
+            sys.exit(1)
 
     def close(self):
         """Closes the connection to the web_server"""

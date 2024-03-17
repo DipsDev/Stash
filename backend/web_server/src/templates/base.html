@@ -91,7 +91,6 @@
                     <div>
                         <a href="#" class="hover:bg-[#367FA9] px-4 pt-5 pb-4 text-sm" onclick="toggle_user_menu(null)">{{ current_user.username | e }}</a>
                         <div id="user_menu" class="z-10 hidden bg-white absolute w-[160px] text-sm left-[-80px] top-[42px] flex-col items-start justify-center">
-                            <a href="{{ url_for('auth.keys') }}" class="text-gray-600 px-3 py-2 border border-gray-200 w-full hover:bg-gray-100">Your Keys</a>
                             <a href="{{ url_for('auth.logout_route') }}" class="text-gray-600 px-3 py-2 border border-t-none border-gray-200 w-full hover:bg-gray-100">Sign out</a>
                         </div>
                     </div>

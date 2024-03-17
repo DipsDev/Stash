@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 import re
 
 from services.database import db
-from services.models import Repository, User
+from backend.models import Repository, User
 from services.file_system import file_system
 
 repo = Blueprint("repo", __name__)
