@@ -7,7 +7,7 @@ from models.commit import Commit
 
 def create_pkt_line(command_name: str, data: str):
     """Encodes the data to pkt line format"""
-    d = f"{str(len(command_name)).zfill(4)}{command_name}\n{str(len(data)).zfill(4)}{data}\n0000"
+    d = f"{command_name}\n{data}\n0000"
     return d.encode()
 
 

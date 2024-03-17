@@ -1,13 +1,16 @@
 from pyDH import pyDH
 
+from file_server.providers.AuthenticationProvider import AuthenticationProvider
 from file_server.providers.EncryptionProvider import EncryptionProvider
 
 
 ###
 # Packet line format
-# (length [4 bytes])command_name\n
-# (length [4 bytes])data\n
+
+# command_name\n
+# data\n
 # 0000
+
 ###
 
 class ClientThread:
@@ -15,7 +18,10 @@ class ClientThread:
         self.conn = conn
         self.df = pyDH.DiffieHellman()
         self.enc = EncryptionProvider(self.conn)
+        self.auth = AuthenticationProvider(self.conn)
 
     def run(self):
+        # Exchange cryptography keys, and establish a secured session
         self.enc.exchange_keys()
+
         print(self.enc.decrypt_incoming_packet())
