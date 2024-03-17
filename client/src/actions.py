@@ -116,7 +116,7 @@ class Actions:
         commit_data: Commit = self.commit_handler.extract_commit_data(current_commit)
         assert commit_data is not None
 
-        # fetch the current commit from the server
+        # fetch the current commit from the web_server
         # find_diff between the current local version and remote version
         # send the diff files
         self.remote_connection_handler.connect()

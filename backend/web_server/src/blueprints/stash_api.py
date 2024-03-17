@@ -64,7 +64,7 @@ def current_head_commit(repo, branch):
 
 @uses_repository("/objects/<s>/<c>")
 def get_server_object(repo: Repository, s: str, c: str):
-    """Fetch an object from the server"""
+    """Fetch an object from the web_server"""
     if len(s) != 2 or len(c) != 38:
         abort(400)
     obj = file_system.get_server_object(repo.id, s, c)

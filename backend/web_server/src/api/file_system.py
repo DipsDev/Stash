@@ -38,7 +38,7 @@ class FileSystem:
         self.main_folder = storage_path
 
     def get_server_object(self, repo_id: str, s: str, c: str):
-        """Fetch a server object from a remote repository"""
+        """Fetch a web_server object from a remote repository"""
         assert len(s) == 2
         assert len(c) == 38
         if not os.path.exists(os.path.join(self.main_folder, repo_id, "objects", s, c)):

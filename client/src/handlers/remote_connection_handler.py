@@ -20,12 +20,14 @@ class RemoteConnectionHandler:
         self.handler = EncryptionHandler(self.socket)
 
     def connect(self):
-        """Connect to remote server"""
+        """Connect to remote web_server"""
         self.socket.connect(('127.0.0.1', 8838))
         self.handler.exchange_keys()
+        login_info = input("stash: Provide your login details, separated by a @: ")
+        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", login_info)))
 
     def close(self):
-        """Closes the connection to the server"""
+        """Closes the connection to the web_server"""
         self.socket.close()
 
     def get_remote_head_commit(self, branch: str):

@@ -2,7 +2,6 @@ import os
 
 from flask import Flask, render_template
 from flask_login import current_user
-from sqlalchemy import Join, select
 
 from blueprints.repos import repo
 from services.database import db
