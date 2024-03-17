@@ -29,7 +29,11 @@ class CommitHandler:
             return self._local_find_tree_diffs(cmt1_data.get_tree_hash(), cmt2_data.get_tree_hash())
 
         local_data = self.extract_commit_data(commit1_sha)
-        remote_data = self.remote_handler.resolve_remote_commit_data(self.remote_handler.get_remote_head_commit("main"))
+        remote_head_commit = self.remote_handler.get_remote_head_commit("main")
+        if remote_head_commit == "":
+            print("stash: No active changes to remote repository.")
+            raise NotImplementedError()
+        remote_data = self.remote_handler.resolve_remote_commit_data(remote_head_commit)
 
         return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash())
 

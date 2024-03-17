@@ -16,22 +16,32 @@ class AuthenticationProvider:
         """Authenticate user, uses recv"""
         login_command, data = parse_pkt(self.enc.decrypt_incoming_packet())
         if login_command != "stash-login":
-            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR.value, "stash: Unauthenticated")))
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Unauthenticated")))
             self.conn.close()
             return
-        username, password = data.split("@")
+        d = data.split("@")
+
+        if len(d) != 2:
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Invalid Login "
+                                                                                       "credentials")))
+            self.conn.close()
+            return
+
+        username, password = d
 
         db_user = self.db_session.query(User).where(User.username == username).one_or_none()
 
         if db_user is None:
             self.conn.send(self.enc.encrypt_packet(
-                create_pkt_line(ResponseCode.ERROR.value, "stash: Login credentials are invalid")))
+                create_pkt_line(ResponseCode.ERROR, "stash: Login credentials are invalid")))
             self.conn.close()
             return
 
         if not bcrypt.checkpw(password.encode(), db_user.password):
-            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR.value, "stash: Login "
-                                                                                             "credentials are "
-                                                                                             "invalid")))
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Login "
+                                                                                       "credentials are "
+                                                                                       "invalid")))
             self.conn.close()
             return
+
+        self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.AUTHORIZED, "stash: login successful")))

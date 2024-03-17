@@ -28,26 +28,42 @@ class RemoteConnectionHandler:
     def connect(self):
         """Connect to remote web_server"""
         self.socket.connect(('127.0.0.1', 8838))
+
         self.handler.exchange_keys()
+
         login_info = input("stash: Provide your login details, separated by a @: ")
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", login_info)))
 
         pkt_command, pkt_data = parse_pkt(self.handler.decrypt_incoming_packet())
         if pkt_command == "stash-error":
             print(pkt_data)
-            sys.exit(1)
+            self.close()
 
     def close(self):
         """Closes the connection to the web_server"""
         self.socket.close()
+        sys.exit(1)
 
     def get_remote_head_commit(self, branch: str):
         """Get remote head commit"""
-        raise NotImplementedError()
+
+        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-head-commit", branch)))
+
+        command_name, data = parse_pkt(self.handler.decrypt_incoming_packet())
+        if command_name != "stash-send-object":
+            print(data)
+            self.close()
+        return data
 
     def resolve_remote_object(self, sha1: str):
         """Resolve a remote object"""
-        raise NotImplementedError()
+        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-object", sha1)))
+
+        command_name, data = parse_pkt(self.handler.decrypt_incoming_packet())
+        if command_name != "stash-send-object":
+            print(data)
+            self.close()
+        return data
 
     def resolve_remote_commit_data(self, sha1):
         cmt = self.resolve_remote_object(sha1)
