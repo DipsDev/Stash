@@ -58,7 +58,7 @@ class CommitHandler:
                     lines += f"~ {key}\n"
                 elif obj.get_type() == "tree":
                     lines += "\n" + \
-                             self._local_find_tree_diffs(parsed_remote.get(key).get_hash(), obj.get_hash())
+                             self._remote_find_tree_diffs(parsed_remote.get(key).get_hash(), obj.get_hash())
                 continue
 
         for key, obj in parsed_remote.items():
