@@ -1,6 +1,7 @@
 """
 Module that handles all api related actions
 """
+import os
 from functools import wraps
 
 from flask import Blueprint, abort, request
@@ -10,6 +11,14 @@ from services.models import Repository, User, AuthenticationKey
 from services.file_system import file_system
 
 stash_api = Blueprint("stash_api", __name__)
+
+
+def is_directory_traversal(file_name):
+    current_directory = os.path.abspath(os.curdir)
+    requested_path = os.path.relpath(file_name, start=current_directory)
+    requested_path = os.path.abspath(requested_path)
+    common_prefix = os.path.commonprefix([requested_path, current_directory])
+    return common_prefix != current_directory
 
 
 def uses_repository(url: str, methods=None):

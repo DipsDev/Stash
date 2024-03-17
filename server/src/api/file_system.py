@@ -1,4 +1,5 @@
 import os
+import sys
 import zlib
 
 
@@ -74,14 +75,23 @@ class FileSystem:
 
         return message, tree_hash, parent_hash
 
-    def get_current_commit_files(self, repo_id: str, branch_name="main") -> list[str]:
+    def get_current_commit_files(self, repo_id: str, branch_name="main") -> (str, list[()]):
         """Returns a list of the current commit file names"""
         last_commit = read_file(os.path.join(self.main_folder, repo_id, "refs/head", branch_name), binary_=False)
         if last_commit == "":
             return []
 
         message, tree_hash, parent = self.extract_commit_data(repo_id, last_commit)
-        raise NotImplementedError()
+
+        # Traverse tree hash
+        tree_view = self.get_server_object(repo_id, tree_hash[:2], tree_hash[2:]).decode().split("\n")
+        tree_view.pop()  # Remove blank line
+
+        files_commit = []
+        for row in tree_view:
+            tp, hsh, filename = row.split(" ")
+            files_commit.append((tp, hsh, filename))
+        return message, files_commit
 
     def allocate_repository(self, repo_id: str):
         """Allocates a new repository in the filesystem"""

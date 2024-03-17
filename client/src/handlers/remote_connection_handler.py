@@ -23,7 +23,6 @@ class RemoteConnectionHandler:
         """Connect to remote server"""
         self.socket.connect(('127.0.0.1', 8838))
         self.handler.exchange_keys()
-        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-pack", "abcdefgh")))
 
     def close(self):
         """Closes the connection to the server"""

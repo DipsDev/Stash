@@ -49,12 +49,12 @@ class Actions:
 
     """
 
-    def __init__(self, repo: str, remote_handler: RemoteConnectionHandler):
+    def __init__(self, repo: str, remote_connection_handler: RemoteConnectionHandler):
         self.repo = repo
         self.full_repo = os.path.join(self.repo, ".stash")
 
-        self.commit_handler = CommitHandler(self.repo, self.full_repo, remote_handler)
-        self.remote_handler = remote_handler
+        self.commit_handler = CommitHandler(self.repo, self.full_repo, remote_connection_handler)
+        self.remote_connection_handler = remote_connection_handler
 
     def cat_file(self, hash_id):
         """Cats the content of a file by its hash"""
@@ -119,4 +119,4 @@ class Actions:
         # fetch the current commit from the server
         # find_diff between the current local version and remote version
         # send the diff files
-        self.remote_handler.connect()
+        self.remote_connection_handler.connect()

@@ -31,4 +31,3 @@ class EncryptionHandler:
         """Encrypts the packet, and prefixes with the length"""
         encrypted_data = self.aes.encrypt(pad(data, 32))
         return f"{str(len(encrypted_data)).zfill(4)}".encode() + encrypted_data
-
