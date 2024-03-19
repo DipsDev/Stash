@@ -46,7 +46,12 @@ class CommitHandler:
         if local_hash == remote_hash:
             return ""
         lines = ""
-        remote_data = self.remote_handler.resolve_remote_object(remote_hash)
+
+        # Check if object exists local, to decrease traffic
+        if objects.resolve_object(self.full_repo, remote_hash):
+            remote_data = objects.resolve_object(self.full_repo, remote_hash).decode()
+        else:
+            remote_data = self.remote_handler.resolve_remote_object(remote_hash)
         local_data = objects.resolve_object(self.full_repo, local_hash).decode()
 
         parsed_remote = Tree.parse_tree(remote_data)
