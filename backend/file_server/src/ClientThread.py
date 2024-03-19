@@ -16,12 +16,12 @@ from providers.FileSystemProvider import FileSystemProvider
 
 
 class ClientThread:
-    def __init__(self, conn, session):
+    def __init__(self, conn, db_session):
         self.conn = conn
-        self.session = session
+        self.db_session = db_session
         self.df = pyDH.DiffieHellman()
         self.enc = EncryptionProvider(self.conn)
-        self.auth = AuthenticationProvider(self.conn, self.session, self.enc)
+        self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc)
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__")
 
     def __handle_client(self):
