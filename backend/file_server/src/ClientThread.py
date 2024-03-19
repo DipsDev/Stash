@@ -10,8 +10,7 @@ from providers.FileSystemProvider import FileSystemProvider
 # Packet line format
 
 # command_name\n
-# data\n
-# 0000
+# data
 
 ###
 
@@ -46,8 +45,6 @@ class ClientThread:
 
         # Authenticate user
         self.auth.authenticate_user()
-
-        print("ran")
 
         while True:
             self.handle_client()

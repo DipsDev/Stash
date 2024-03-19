@@ -21,9 +21,9 @@ def read_file(path, binary_=True) -> bytes or str:
 
 
 def resolve_object(main_folder, repo_id, sha1) -> bytes:
-    """Returns the original content of an object"""
+    """Returns the bytes of an object"""
     path = resolve_object_location(main_folder, repo_id, sha1)
-    return zlib.decompress(bytes(read_file(path, binary_=True)))
+    return bytes(read_file(path, binary_=True))
 
 
 def resolve_object_location(full_repo, repo_id, obj_hash):

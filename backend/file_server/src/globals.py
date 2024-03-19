@@ -11,17 +11,19 @@ class ResponseCode(Enum):
 
 def parse_pkt(data: str) -> (str, str):
     """Parses the pkt line format to command name, data"""
-    d = data.split("\n")
-    return d[0], d[1]
+    header_length = int(data[:4])
+    header = data[4:4+header_length]
+    return header, data[5+header_length::]
 
 
 def create_pkt_line(command_name: ResponseCode, data: str | bytes, data_binary_=False):
     """Encodes the data to pkt line format"""
+    command_name_length = str(len(str(command_name.value))).zfill(4)
     if not data_binary_:
-        d = f"{command_name.value}\n{data}\n0000"
+        d = f"{command_name_length}{command_name.value}\n{data}"
         return d.encode()
 
-    d = f"{command_name.value}\n".encode() + data + "\n0000".encode()
+    d = f"{command_name_length}{command_name.value}\n".encode() + data
     return d
 
 
