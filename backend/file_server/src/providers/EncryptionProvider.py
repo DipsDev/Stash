@@ -23,14 +23,14 @@ class EncryptionProvider:
         """Creates aes symmetric key"""
         self.aes = AES.new(bytes.fromhex(shared), AES.MODE_ECB)
 
-    def decrypt_incoming_packet(self) -> str:
+    def decrypt_incoming_packet(self) -> bytes:
         """Decrypts incoming packets, uses recv"""
         encrypted_data_length = self.socket.recv(4)
         if encrypted_data_length == b'':
             self.socket.close()
             sys.exit(1)
         encrypted_data = self.socket.recv(int(encrypted_data_length))
-        return unpad(self.aes.decrypt(encrypted_data), 32).decode()
+        return unpad(self.aes.decrypt(encrypted_data), 32)
 
     def encrypt_packet(self, data: bytes) -> bytes:
         """Encrypts the packet, and prefixes with the length"""

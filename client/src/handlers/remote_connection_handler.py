@@ -7,10 +7,10 @@ from handlers.encryption_handler import EncryptionHandler
 from models.commit import Commit
 
 
-def create_pkt_line(command_name: str, data: str | bytes, data_binary_=False):
+def create_pkt_line(command_name: str, data: str | bytes):
     """Encodes the data to pkt line format"""
     command_name_length = str(len(command_name)).zfill(4)
-    if not data_binary_:
+    if type(data) == str:
         d = f"{command_name_length}{command_name}\n{data}"
         return d.encode()
 

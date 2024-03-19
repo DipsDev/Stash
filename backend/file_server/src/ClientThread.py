@@ -30,13 +30,15 @@ class ClientThread:
 
         if command_name == ResponseCode.RECEIVE_OBJECT.value:
             data = self.file_system.get_server_object("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data[:2], data[2:])
-            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data, data_binary_=True)))
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
 
         if command_name == ResponseCode.RECEIVE_HEAD_COMMIT.value:
             data = self.file_system.get_head_commit("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
+
+        self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Unknown command")))
 
     def run(self):
         """Client thread main loop"""
