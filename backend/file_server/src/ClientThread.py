@@ -24,7 +24,7 @@ class ClientThread:
         self.auth = AuthenticationProvider(self.conn, self.session, self.enc)
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__")
 
-    def handle_client(self):
+    def __handle_client(self):
         """Handle client command communications"""
         command_name, data = parse_pkt(self.enc.decrypt_incoming_packet())
 
@@ -47,4 +47,4 @@ class ClientThread:
         self.auth.authenticate_user()
 
         while True:
-            self.handle_client()
+            self.__handle_client()

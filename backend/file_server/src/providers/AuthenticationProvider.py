@@ -15,7 +15,6 @@ class AuthenticationProvider:
     def authenticate_user(self):
         """Authenticate user, uses recv"""
         login_command, data = parse_pkt(self.enc.decrypt_incoming_packet())
-        print("h", login_command, data)
         if login_command != "stash-login":
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Unauthenticated")))
             self.conn.close()
