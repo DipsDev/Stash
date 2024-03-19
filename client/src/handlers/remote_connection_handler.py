@@ -1,5 +1,6 @@
 import socket
 import sys
+import zlib
 
 from handlers.encryption_handler import EncryptionHandler
 from models.commit import Commit
@@ -16,11 +17,17 @@ def create_pkt_line(command_name: str, data: str | bytes, data_binary_=False):
     return d
 
 
-def parse_pkt(data: str) -> (str, str):
+def parse_pkt(data: bytes, binary_data=False) -> (str, str):
     """Parses the pkt line format to command name, data"""
-    header_length = int(data[:4])
-    header = data[4:4+header_length]
-    return header, data[5+header_length::]
+    if not binary_data:
+        data = data.decode()
+        header_length = int(data[:4])
+        header = data[4:4 + header_length]
+        return header, data[5 + header_length::]
+
+    header_length = int(data[:4].decode())
+    header = data[4:4 + header_length].decode()
+    return header, zlib.decompress(data[5 + header_length::]).decode()
 
 
 class RemoteConnectionHandler:
@@ -56,7 +63,6 @@ class RemoteConnectionHandler:
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-head-commit", branch)))
 
         command_name, data = parse_pkt(self.handler.decrypt_incoming_packet())
-        print(command_name, data)
         if command_name != "stash-send-object":
             print(data)
             self.close()
@@ -67,9 +73,9 @@ class RemoteConnectionHandler:
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-object", sha1)))
 
         temp = self.handler.decrypt_incoming_packet()
-        command_name, data = parse_pkt(temp)
+        command_name, data = parse_pkt(temp, binary_data=True)
         if command_name != "stash-send-object":
-            print(data)
+            print("stash: Unexpected error")
             self.close()
         return data
 

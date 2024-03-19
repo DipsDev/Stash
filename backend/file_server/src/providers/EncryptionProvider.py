@@ -26,6 +26,9 @@ class EncryptionProvider:
     def decrypt_incoming_packet(self) -> str:
         """Decrypts incoming packets, uses recv"""
         encrypted_data_length = self.socket.recv(4)
+        if encrypted_data_length == b'':
+            self.socket.close()
+            sys.exit(1)
         encrypted_data = self.socket.recv(int(encrypted_data_length))
         return unpad(self.aes.decrypt(encrypted_data), 32).decode()
 

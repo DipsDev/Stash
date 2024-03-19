@@ -120,5 +120,6 @@ class Actions:
         # find_diff between the current local version and remote version
         # send the diff files
         self.remote_connection_handler.connect()
+        print(self.commit_handler.find_diff(current_commit, "", True))
         self.remote_connection_handler.close()
 
