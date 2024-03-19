@@ -48,7 +48,7 @@ class CommitHandler:
         lines = ""
 
         # Check if object exists local, to decrease traffic
-        if objects.resolve_object(self.full_repo, remote_hash):
+        if os.path.exists(objects.resolve_object_location(self.full_repo, remote_hash)):
             remote_data = objects.resolve_object(self.full_repo, remote_hash).decode()
         else:
             remote_data = self.remote_handler.resolve_remote_object(remote_hash)
