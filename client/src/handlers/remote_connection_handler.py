@@ -1,6 +1,7 @@
 import socket
 import sys
 import zlib
+import getpass
 
 from handlers.encryption_handler import EncryptionHandler
 from models.commit import Commit
@@ -44,8 +45,10 @@ class RemoteConnectionHandler:
 
         self.handler.exchange_keys()
 
-        login_info = input("stash: Provide your login details, separated by a @: ")
-        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", login_info)))
+        username = input("stash: Please provide your username: ")
+        password = getpass.getpass(f"{username}@stash's password: ")
+
+        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", f"{username}@{password}")))
 
         pkt_command, pkt_data = parse_pkt(self.handler.decrypt_incoming_packet())
         if pkt_command == "stash-error":
