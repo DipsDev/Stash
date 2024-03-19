@@ -1,3 +1,5 @@
+import sys
+
 import bcrypt
 from sqlalchemy.orm import Session
 
@@ -18,14 +20,14 @@ class AuthenticationProvider:
         if login_command != "stash-login":
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Unauthenticated")))
             self.conn.close()
-            return
+            sys.exit(1)
         d = data.split("@")
 
         if len(d) != 2:
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Invalid Login "
                                                                                        "credentials")))
             self.conn.close()
-            return
+            sys.exit(1)
 
         username, password = d
 
@@ -35,13 +37,13 @@ class AuthenticationProvider:
             self.conn.send(self.enc.encrypt_packet(
                 create_pkt_line(ResponseCode.ERROR, "stash: Login credentials are invalid")))
             self.conn.close()
-            return
+            sys.exit(1)
 
         if not bcrypt.checkpw(password.encode(), db_user.password):
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Login "
                                                                                        "credentials are "
                                                                                        "invalid")))
             self.conn.close()
-            return
+            sys.exit(1)
 
         self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.AUTHORIZED, "stash: login successful")))
