@@ -21,11 +21,11 @@ class CommitHandler:
         self.repo = repo
         self.remote_handler = remote_handler
 
-    def generate_prep_file(self, tree: str):
+    def generate_prep_file(self, tree_hash: str):
         """Returns a preparefile for the given commit"""
-        tree_data_encoded = objects.resolve_object(self.full_repo, tree)
+        tree_data_encoded = objects.resolve_object(self.full_repo, tree_hash)
         tree = Tree.parse_tree(tree_data_encoded.decode())
-        file = ""
+        file = f"{tree_hash} tree\n"
         for key, obj in tree.items():
             file += f"{obj.get_hash()} {obj.get_type()}\n"
             if obj.get_type() == "tree":
@@ -45,7 +45,8 @@ class CommitHandler:
         if remote_head_commit == "":
             print("stash: Remote repository is empty. Fetching resources...")
             current_commit = self.extract_commit_data(self.get_head_commit("main"))
-            return self.generate_prep_file(current_commit.get_tree_hash()) + f"{commit1_sha} commit\n"
+            d = self.generate_prep_file(current_commit.get_tree_hash()) + f"{commit1_sha} commit\n"
+            return d
 
         remote_data = self.remote_handler.resolve_remote_commit_data(remote_head_commit)
 
