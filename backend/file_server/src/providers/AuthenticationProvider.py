@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend.file_server.src.providers.EncryptionProvider import EncryptionProvider
 from globals import parse_pkt, create_pkt_line, ResponseCode
-from backend.models import User
+from backend.models import User, Repository
 
 
 class AuthenticationProvider:
@@ -23,13 +23,13 @@ class AuthenticationProvider:
             sys.exit(1)
         d = data.decode().split("@")
 
-        if len(d) != 2:
+        if len(d) != 3:
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Invalid Login "
                                                                                        "credentials")))
             self.conn.close()
             sys.exit(1)
 
-        username, password = d
+        username, repo_name, password = d
 
         db_user = self.db_session.query(User).where(User.username == username).one_or_none()
 
@@ -46,4 +46,14 @@ class AuthenticationProvider:
             self.conn.close()
             sys.exit(1)
 
+        repo = self.db_session.query(Repository).where(
+            Repository.user_id == db_user.id, Repository.name == repo_name.rstrip(".stash")).one_or_none()
+        if repo is None:
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Login credentials are "
+                                                                                       "invalid")))
+            self.conn.close()
+            sys.exit(1)
+
         self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.AUTHORIZED, "stash: login successful")))
+
+        return repo.id

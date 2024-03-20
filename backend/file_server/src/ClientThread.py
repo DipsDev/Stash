@@ -23,6 +23,7 @@ class ClientThread:
         self.enc = EncryptionProvider(self.conn)
         self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc)
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__")
+        self.repo_id = None
 
     def __handle_client(self):
         """Handle client command communications"""
@@ -30,18 +31,18 @@ class ClientThread:
 
         if command_name == ResponseCode.RECEIVE_OBJECT.value:
             data = data.decode()
-            data = self.file_system.get_server_object("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data[:2], data[2:])
+            data = self.file_system.get_server_object(self.repo_id, data[:2], data[2:])
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
 
         if command_name == ResponseCode.RECEIVE_HEAD_COMMIT.value:
             data = data.decode()
-            data = self.file_system.get_head_commit("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data)
+            data = self.file_system.get_head_commit(self.repo_id, data)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
 
         if command_name == ResponseCode.UPDATE_HEAD.value:
-            self.file_system.update_head_commit("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", "main", data.decode())
+            self.file_system.update_head_commit(self.repo_id, "main", data.decode())
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
                                                                    f"stash: Remote branch updated."
                                                                    f" '{'main'}' is up to date")))
@@ -49,7 +50,7 @@ class ClientThread:
 
         if command_name == ResponseCode.SEND_PACKFILE.value:
             try:
-                self.file_system.execute_packfile("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data)
+                self.file_system.execute_packfile(self.repo_id, data)
             except Exception as e:
                 print(e)
                 self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Uploading failed")))
@@ -66,7 +67,7 @@ class ClientThread:
         self.enc.exchange_keys()
 
         # Authenticate user
-        self.auth.authenticate_user()
+        self.repo_id = self.auth.authenticate_user()
 
         while True:
             self.__handle_client()

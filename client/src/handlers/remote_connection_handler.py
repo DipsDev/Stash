@@ -75,8 +75,8 @@ class RemoteConnectionHandler:
 
         self.handler.exchange_keys()
 
-        username = input("stash: Please provide your username: ")
-        password = getpass.getpass(f"{username}@stash's password: ")
+        username = input("stash: Please provide your stash fingerprint (ex: username@repository.stash): ")
+        password = getpass.getpass(f"{username}'s password: ")
 
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", f"{username}@{password}")))
 
