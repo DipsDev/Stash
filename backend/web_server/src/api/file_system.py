@@ -82,7 +82,7 @@ class FileSystem:
             return []
 
         message, tree_hash, parent = self.extract_commit_data(repo_id, last_commit)
-
+        print(tree_hash)
         # Traverse tree hash
         tree_view = self.get_server_object(repo_id, tree_hash[:2], tree_hash[2:]).decode().split("\n")
         tree_view.pop()  # Remove blank line
