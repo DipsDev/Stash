@@ -3,6 +3,7 @@ Module that exports the Actions class
 """
 import os
 import pickle
+import sys
 import zlib
 
 import objects
@@ -95,12 +96,15 @@ class Actions:
         path = os.path.join(self.repo, path)
         path = os.path.normpath(path)
         # Get the index database
+        if not os.path.exists(path):
+            print("stash: No file was found. Please check your spelling.")
+            sys.exit(1)
+
         index_path = os.path.join(self.full_repo, "index", "d")
         # Load the database
         indices = pickle.loads(read_file(index_path))
-        sha1 = hash_object(self.repo, read_file(path))
         # Update the database
-        indices[path] = sha1
+        indices[path] = True
 
         write_file(index_path, pickle.dumps(indices))
 
@@ -113,8 +117,7 @@ class Actions:
         """push changes to the cloud"""
 
         current_commit = self.commit_handler.get_head_commit(branch_name)
-        commit_data: Commit = self.commit_handler.extract_commit_data(current_commit)
-        assert commit_data is not None
+        assert current_commit != ""
 
         # fetch the current commit from the web_server
         # find_diff between the current local version and remote version

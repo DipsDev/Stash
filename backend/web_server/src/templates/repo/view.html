@@ -12,8 +12,8 @@
 {% macro file_view(type, file_name) %}
       <tr class="border-b border-gray-100">
         <td class="px-4 py-2 text-[#3C8DBC]">{{ file_name | e }}</td>
-        <td class="px-4 py-2 text-black">Update issues guideline</td>
-        <td class="px-4 py-2 text-black">2 months ago</td>
+        <td class="px-4 py-2 text-black"></td>
+        <td class="px-4 py-2 text-black"></td>
       </tr>
 {% endmacro %}
 
@@ -22,7 +22,7 @@
 
 <script>
     function copy_stash_url() {
-      var copyText = "{{ request.url.split('/')[0:3] | join('/') }}/{{ request.url.split('/') | last }}.stash"
+      var copyText = "@{{ request.url.split('/') | last}}.stash"
       navigator.clipboard.writeText(copyText);
     }
 </script>
@@ -62,7 +62,7 @@
                 </select>
             </span>
             <span class="pl-2 border border-gray-300 rounded my-1 text-gray-300 cursor-pointer" onclick="copy_stash_url()">
-                {{ request.url.split('/')[0:3] | join('/') }}/{{ request.url.split('/') | last}}.stash
+                @{{ request.url.split('/') | last}}.stash
                 <button class="ml-2 p-2 text-[15px] bg-[#F5F5F5] text-gray-600 font-semibold">copy</button>
             </span>
 
