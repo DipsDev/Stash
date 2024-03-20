@@ -39,6 +39,15 @@ class RemoteConnectionHandler:
         self.socket = socket.socket()
         self.handler = EncryptionHandler(self.socket)
 
+    def generate_pack_file(self, prep_file: str):
+        """Generates a packfile from a prep file
+        prep files usually look like:
+
+        sha1 type
+        """
+        pack_file = ""
+        prep_file = prep_file.split("\n")
+
     def connect(self):
         """Connect to remote web_server"""
         self.socket.connect(('127.0.0.1', 8838))

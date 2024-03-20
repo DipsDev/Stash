@@ -20,6 +20,17 @@ class CommitHandler:
         self.repo = repo
         self.remote_handler = remote_handler
 
+    def generate_prep_file(self, tree: str):
+        """Returns a preparefile for the given commit"""
+        tree_data_encoded = objects.resolve_object(self.full_repo, tree)
+        tree = Tree.parse_tree(tree_data_encoded.decode())
+        file = ""
+        for key, obj in tree.items():
+            file += f"{obj.get_hash()} {obj.get_type()}\n"
+            if obj.get_type() == "tree":
+                file += self.generate_prep_file(obj.get_hash())
+        return file
+
     def find_diff(self, commit1_sha: str, commit2_sha: str, remote_=False):
         """Finds the diff between two commits. given their hashes"""
         if not remote_:
@@ -31,21 +42,23 @@ class CommitHandler:
         local_data = self.extract_commit_data(commit1_sha)
         remote_head_commit = self.remote_handler.get_remote_head_commit("main")
         if remote_head_commit == "":
-            print("stash: No active changes to remote repository.")
-            raise NotImplementedError()
+            print("stash: Remote repository is empty. Fetching resources...")
+            current_commit = self.extract_commit_data(self.get_head_commit("main"))
+            return self.generate_prep_file(current_commit.get_tree_hash())
+
         remote_data = self.remote_handler.resolve_remote_commit_data(remote_head_commit)
 
         return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash())
 
     def _remote_find_tree_diffs(self, remote_hash: str, local_hash: str):
         """
-        Returns the diff between trees
+        Returns the items that should be in sent packfile.
         h1: local tree hash
         h2: remote tree hash
         """
         if local_hash == remote_hash:
             return ""
-        lines = ""
+        lines = f"{local_hash} tree\n"
 
         # Check if object exists local, to decrease traffic
         if os.path.exists(objects.resolve_object_location(self.full_repo, remote_hash)):
@@ -59,23 +72,21 @@ class CommitHandler:
 
         for key, obj in parsed_local.items():
             if key not in parsed_remote:
-                lines += f"+ {key}\n"
+                lines += f"{obj.get_hash()} {obj.get_type()}\n"
                 continue
 
             if obj.get_hash() != parsed_remote.get(key).get_hash():
                 if obj.get_type() == "blob":
-                    lines += f"~ {key}\n"
+                    lines += f"{obj.get_hash()} {obj.get_type()}\n"
                 elif obj.get_type() == "tree":
-                    lines += "\n" + \
+                    lines += f"{obj.get_hash()} tree\n" + \
                              self._remote_find_tree_diffs(parsed_remote.get(key).get_hash(), obj.get_hash())
                 continue
 
-        for key, obj in parsed_remote.items():
-            if key not in parsed_local:
-                if obj.get_type() == "blob":
-                    lines += f"- {key}\n"
-                if obj.get_type() == "tree":
-                    lines += f"- {key}\n"
+        # Shows what needs to be deleted in server side, currently garbage collection is not supported
+        # for key, obj in parsed_remote.items():
+            # if key not in parsed_local:
+                # lines += f"- {key}\n"
 
         return lines
 
@@ -126,13 +137,13 @@ class CommitHandler:
             if it.is_file():
                 if full_path in files:
                     sha1 = objects.hash_object(self.repo, read_file(full_path))
-                    leaf = TreeNode(full_path[path_length+1::], sha1)
+                    leaf = TreeNode(full_path[path_length + 1::], sha1)
                     entries.append(leaf)
             else:
                 if len(os.listdir(full_path)) == 0:
                     continue
                 new_sha1, new_entries = self.create_tree(files, path_length, full_path)
-                entries.append(Tree(full_path[path_length+1::], new_sha1, new_entries))
+                entries.append(Tree(full_path[path_length + 1::], new_sha1, new_entries))
 
         final_str = ""
         for i in entries:
