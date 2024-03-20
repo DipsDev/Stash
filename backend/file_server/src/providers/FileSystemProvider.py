@@ -1,4 +1,5 @@
 import os
+import struct
 import zlib
 
 
@@ -36,6 +37,32 @@ class FileSystemProvider:
     def __init__(self, storage_path: str):
         self.main_folder = storage_path
 
+    def execute_packfile(self, repo_id: str, pack_file: bytes) -> (str, bytes):
+        """
+        Decompiles the packfile, to usable form
+
+        {sha (40 bytes)} {data_length}{data}
+
+        """
+        index = 0
+        while index < len(pack_file):
+            sha1 = pack_file[index:index + 40].decode()  # Extract SHA1 hash
+            index += 41
+            data_length = int(pack_file[index:index + 4].decode())
+            index += 4
+            data_content = pack_file[index:index + data_length]  # Extract data
+            index += data_length + 1  # Move index to the next line
+            self.create_object(repo_id, sha1, data_content)
+
+    def create_object(self, repo_id: str, sha: str, compressed_data: bytes):
+        """Creates an object in the objects database"""
+        pth = resolve_object_location(self.main_folder, repo_id, sha)
+        if not os.path.exists(pth):
+            folder_path = os.path.join(self.main_folder, repo_id, "objects", sha[:2])
+            if not os.path.exists(folder_path):
+                os.mkdir(folder_path)
+            write_file(pth, compressed_data, binary_=True)
+
     def get_server_object(self, repo_id: str, s: str, c: str):
         """Fetch a web_server object from a remote repository"""
         assert len(s) == 2
@@ -57,6 +84,11 @@ class FileSystemProvider:
             return None
         cmt = read_file(head_commit_path, binary_=False)
         return cmt
+
+    def update_head_commit(self, repo_id: str, branch: str, new_head: str):
+        """Updates the current head commit"""
+        head_path = os.path.join(self.main_folder, repo_id, "refs", "head", branch)
+        write_file(head_path, new_head, binary_=False)
 
     def extract_commit_data(self, repo_id: str, sha1) -> tuple:
         """Extracts the commit data, given its hash value"""

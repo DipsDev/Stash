@@ -28,6 +28,7 @@ class EncryptionProvider:
         encrypted_data_length = self.socket.recv(4)
         if encrypted_data_length == b'':
             self.socket.close()
+            print("Client closed.")
             sys.exit(1)
         encrypted_data = self.socket.recv(int(encrypted_data_length))
         return unpad(self.aes.decrypt(encrypted_data), 32)

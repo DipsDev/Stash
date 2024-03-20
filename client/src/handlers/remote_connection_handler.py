@@ -3,39 +3,40 @@ import sys
 import zlib
 import getpass
 
+import objects
 from handlers.encryption_handler import EncryptionHandler
 from models.commit import Commit
+
+
+def parse_pkt(data: bytes) -> (str, str):
+    """Parses the pkt line format to command name, data"""
+    is_compressed = bool(int(data[:1].decode()))
+    header_length = int(data[1:5].decode())
+    header = data[5:5 + header_length].decode()
+
+    if not is_compressed:
+        return header, data[6 + header_length::].decode()
+
+    return header, zlib.decompress(data[6 + header_length::]).decode()
 
 
 def create_pkt_line(command_name: str, data: str | bytes):
     """Encodes the data to pkt line format"""
     command_name_length = str(len(command_name)).zfill(4)
     if type(data) == str:
-        d = f"{command_name_length}{command_name}\n{data}"
+        d = f"{0}{command_name_length}{command_name}\n{data}"
         return d.encode()
 
-    d = f"{command_name_length}{command_name}\n".encode() + data
+    d = f"{1}{command_name_length}{command_name}\n".encode() + data
     return d
-
-
-def parse_pkt(data: bytes, binary_data=False) -> (str, str):
-    """Parses the pkt line format to command name, data"""
-    if not binary_data:
-        data = data.decode()
-        header_length = int(data[:4])
-        header = data[4:4 + header_length]
-        return header, data[5 + header_length::]
-
-    header_length = int(data[:4].decode())
-    header = data[4:4 + header_length].decode()
-    return header, zlib.decompress(data[5 + header_length::]).decode()
 
 
 class RemoteConnectionHandler:
     """Handles remote repository connections, and provides useful functions."""
 
-    def __init__(self, url: str):
+    def __init__(self, full_repo: str, url: str):
         self.repo_url = url.rstrip("/")
+        self.full_repo = full_repo
         self.socket = socket.socket()
         self.handler = EncryptionHandler(self.socket)
 
@@ -45,8 +46,28 @@ class RemoteConnectionHandler:
 
         sha1 type
         """
-        pack_file = ""
+        pack_file = b""
         prep_file = prep_file.split("\n")
+        del prep_file[-1]
+
+        for row in prep_file:
+            sha, obj_type = row.split(" ")
+            loc = objects.resolve_object_location(self.full_repo, sha)
+            data = objects.read_file(loc, binary_=True)
+            pack_file += f"{sha} {str(len(data)).zfill(4)}".encode() + data + "\n".encode()
+
+        return zlib.compress(pack_file)
+
+    def push_pkt(self, code: str, obj: bytes):
+        """Sends a pkt file to the server"""
+        pkt = create_pkt_line(code, obj)
+        self.socket.send(self.handler.encrypt_packet(pkt))
+
+        response_code, data = parse_pkt(self.handler.decrypt_incoming_packet())
+        if response_code != "stash-ok":
+            print(data)
+            sys.exit(1)
+        return data
 
     def connect(self):
         """Connect to remote web_server"""
@@ -85,7 +106,7 @@ class RemoteConnectionHandler:
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-object", sha1)))
 
         temp = self.handler.decrypt_incoming_packet()
-        command_name, data = parse_pkt(temp, binary_data=True)
+        command_name, data = parse_pkt(temp)
         if command_name != "stash-send-object":
             print("stash: Unexpected error")
             self.close()

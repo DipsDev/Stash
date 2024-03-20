@@ -29,13 +29,33 @@ class ClientThread:
         command_name, data = parse_pkt(self.enc.decrypt_incoming_packet())
 
         if command_name == ResponseCode.RECEIVE_OBJECT.value:
+            data = data.decode()
             data = self.file_system.get_server_object("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data[:2], data[2:])
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
 
         if command_name == ResponseCode.RECEIVE_HEAD_COMMIT.value:
+            data = data.decode()
             data = self.file_system.get_head_commit("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
+            return
+
+        if command_name == ResponseCode.UPDATE_HEAD.value:
+            self.file_system.update_head_commit("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", "main", data.decode())
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
+                                                                   f"stash: Remote branch updated."
+                                                                   f" '{'main'}' is up to date")))
+            return
+
+        if command_name == ResponseCode.SEND_PACKFILE.value:
+            try:
+                self.file_system.execute_packfile("1ab7698a1f0ff0ce9796c8ed2fe10c55f0ede06d", data)
+            except Exception as e:
+                print(e)
+                self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Uploading failed")))
+            finally:
+                self.conn.send(
+                    self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK, "stash: Uploading was successful")))
             return
 
         self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Unknown command")))

@@ -3,6 +3,7 @@ Module that exposes the CommitHandler class, which handles all things related to
 """
 import os
 import pickle
+import sys
 
 import objects
 from handlers.remote_connection_handler import RemoteConnectionHandler
@@ -44,15 +45,20 @@ class CommitHandler:
         if remote_head_commit == "":
             print("stash: Remote repository is empty. Fetching resources...")
             current_commit = self.extract_commit_data(self.get_head_commit("main"))
-            return self.generate_prep_file(current_commit.get_tree_hash())
+            return self.generate_prep_file(current_commit.get_tree_hash()) + f"{commit1_sha} commit\n"
 
         remote_data = self.remote_handler.resolve_remote_commit_data(remote_head_commit)
 
-        return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash())
+        if remote_data.get_tree_hash() == local_data.get_tree_hash():
+            print("stash: No changes were found.")
+            sys.exit(1)
+
+        return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash()) \
+               + f"{commit1_sha} commit\n"
 
     def _remote_find_tree_diffs(self, remote_hash: str, local_hash: str):
         """
-        Returns the items that should be in sent packfile.
+        Creates a prepfile based on remote-local diffs.
         h1: local tree hash
         h2: remote tree hash
         """
@@ -72,21 +78,22 @@ class CommitHandler:
 
         for key, obj in parsed_local.items():
             if key not in parsed_remote:
+                print(f"+ {key}\n")
                 lines += f"{obj.get_hash()} {obj.get_type()}\n"
                 continue
 
             if obj.get_hash() != parsed_remote.get(key).get_hash():
                 if obj.get_type() == "blob":
+                    print(f"~ {key}\n")
                     lines += f"{obj.get_hash()} {obj.get_type()}\n"
                 elif obj.get_type() == "tree":
                     lines += f"{obj.get_hash()} tree\n" + \
                              self._remote_find_tree_diffs(parsed_remote.get(key).get_hash(), obj.get_hash())
                 continue
 
-        # Shows what needs to be deleted in server side, currently garbage collection is not supported
-        # for key, obj in parsed_remote.items():
-            # if key not in parsed_local:
-                # lines += f"- {key}\n"
+        for key, obj in parsed_remote.items():
+            if key not in parsed_local:
+                print(f"- {key}\n")
 
         return lines
 

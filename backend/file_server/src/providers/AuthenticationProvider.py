@@ -21,7 +21,7 @@ class AuthenticationProvider:
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Unauthenticated")))
             self.conn.close()
             sys.exit(1)
-        d = data.split("@")
+        d = data.decode().split("@")
 
         if len(d) != 2:
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Invalid Login "

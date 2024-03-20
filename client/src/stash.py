@@ -21,7 +21,8 @@ class Stash:
 
         self.repo_path = os.path.join(folder_path, ".stash")
         self.initialized = os.path.exists(self.repo_path)
-        self.remote_handler = RemoteConnectionHandler(url="http://localhost:5000/first-repo.stash")
+        self.remote_handler = RemoteConnectionHandler(url="http://localhost:5000/first-repo.stash",
+                                                      full_repo=self.repo_path)
         self.stash_actions = Actions(folder_path, self.remote_handler)
 
         self.current_branch_ref = "refs/head/main"
