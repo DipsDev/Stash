@@ -3,7 +3,7 @@ Module that handles creating, viewing and editing repositories
 """
 import hashlib
 
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, abort
 from flask_wtf import FlaskForm
 from sqlalchemy import select
 from wtforms import StringField, RadioField, ValidationError
@@ -65,7 +65,7 @@ def new():
     return render_template("repo/new.html", form=form)
 
 
-@repo.route("/<username>/<repo_name>")
+@repo.route("/<username>/<repo_name>/")
 def view_repo(username: str, repo_name: str):
     """Route responsible for viewing a user's repo"""
     current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
@@ -76,3 +76,22 @@ def view_repo(username: str, repo_name: str):
     head_commit = file_system.get_head_commit(current_repo.id, "main")
     return render_template("repo/view.html", repo=current_repo, files=files,
                            last_commit=head_commit, commit_message=message)
+
+
+@repo.route("/<username>/<repo_name>/<path:path>")
+def view_repo_contents(username: str, repo_name: str, path: str):
+    """Route responsible for viewing a user's repo contents"""
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
+    d = file_system.get_nested_tree_contents(current_repo.id, path)
+    if d is None:
+        abort(404)
+    tp, data = d
+
+    if tp == "tree":
+        return render_template("repo/view.html", repo=current_repo, files=data, commit_message="", last_commit="")
+    else:
+        file_content = file_system.get_server_object(current_repo.id, data[:2], data[2:])
+        if file_content is None:
+            abort(404)
+        return render_template("repo/view_file.html", repo=current_repo,
+                               file_content=enumerate(file_content.decode().split("\n")), commit_message="", last_commit="")

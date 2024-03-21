@@ -9,9 +9,18 @@
       {% block head -%}
       {%- endblock %}
       <style>
-      * {
+        body  {
             font-family: "Source Sans 3", sans-serif;
+            }
+
+        @font-face {
+            font-family: consolas;
+            src: url(/static/fonts/CONSOLA.TTF);
         }
+
+          .code {
+            font-family: consolas;
+          }
       </style>
       <script defer>
           var active = false;

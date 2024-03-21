@@ -11,8 +11,9 @@
 
 {% macro file_view(type, file_name) %}
       <tr class="border-b border-gray-100 hover:bg-[#F5F5F5]">
-        <td class="px-4 py-2 text-[#3C8DBC] flex flex-row items-center justify-start gap-2">
-            {% if type == "blob" %}
+        <td class="px-4 py-2 text-[#3C8DBC]">
+            <a href="{{ url_for('repo.view_repo_contents',username=repo.user.username, repo_name=repo.name, path=file_name ) }}" class="flex flex-row items-center justify-start gap-2">
+                {% if type == "blob" %}
             <svg xmlns="http://www.w3.org/2000/svg" fill="#ACACAC" viewBox="0 0 16 16" width="16" height="16">
                 <path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z">
                 </path>
@@ -20,7 +21,8 @@
             {% else %}
             <svg xmlns="http://www.w3.org/2000/svg" fill="#ACACAC" viewBox="0 0 16 16" width="16" height="16"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path></svg>
             {% endif %}
-            {{ file_name | e }}</td>
+            {{ file_name.split("/") | last | e }}
+            </a></td>
         <td class="px-4 py-2 text-black"></td>
         <td class="px-4 py-2 text-black"></td>
       </tr>
@@ -31,7 +33,7 @@
 
 <script>
     function copy_stash_url() {
-      var copyText = "{{ repo.user.username | e }}@{{ request.url.split('/') | last}}.stash"
+      var copyText = "{{ repo.user.username | e }}@{{ repo.name | e }}.stash"
       navigator.clipboard.writeText(copyText);
     }
 </script>
@@ -71,7 +73,7 @@
                 </select>
             </span>
             <span class="pl-2 border border-gray-300 rounded my-1 text-gray-300 cursor-pointer text-sm" onclick="copy_stash_url()">
-                {{ repo.user.username | e }}@{{ request.url.split('/') | last}}.stash
+                {{ repo.user.username | e }}@{{ repo.name | e }}.stash
                 <button class="ml-2 p-2 bg-[#F5F5F5] text-gray-600 font-semibold">copy</button>
             </span>
 

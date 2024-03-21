@@ -32,6 +32,13 @@ def resolve_object_location(full_repo, repo_id, obj_hash):
     return os.path.join(full_repo, repo_id, "objects", obj_hash[:2], obj_hash[2:])
 
 
+def is_directory_traversal(safe_dir: str, value: str):
+    """Check if the user tried a directory traversal"""
+    if os.path.commonprefix((os.path.realpath(value), safe_dir)) != safe_dir:
+        return True
+    return False
+
+
 class FileSystem:
 
     def __init__(self, storage_path: str):
@@ -42,6 +49,10 @@ class FileSystem:
         assert len(s) == 2
         assert len(c) == 38
         if not os.path.exists(os.path.join(self.main_folder, repo_id, "objects", s, c)):
+            return None
+
+        if is_directory_traversal(os.path.join(self.main_folder, repo_id),
+                                  os.path.join(self.main_folder, repo_id, "objects", s, c)):
             return None
 
         obj = resolve_object(self.main_folder, repo_id, f"{s}{c}")
@@ -75,14 +86,54 @@ class FileSystem:
 
         return message, tree_hash, parent_hash
 
+    def get_nested_tree_contents(self, repo_id: str, tree_path: str, branch_name="main"):
+        """
+        Traverses the content of a tree
+        Returns None if no file was found
+        Returns tree, and tree contents,
+        Returns blob, and blob hash
+        """
+        last_commit = read_file(os.path.join(self.main_folder, repo_id, "refs/head", branch_name), binary_=False)
+        if last_commit == "":
+            return None
+
+        message, tree_hash, parent = self.extract_commit_data(repo_id, last_commit)
+        # Traverse tree hash
+        return self.traverse_tree(repo_id, tree_hash, tree_path.split("/"))
+
+    def traverse_tree(self, repo_id: str, sha1: str, target_path: list[str], current_path="", path_index=0):
+        """Traverses a tree"""
+
+        tree_view = self.get_server_object(repo_id, sha1[:2], sha1[2:]).decode().split("\n")
+        tree_view.pop()
+        calc_path = os.path.join(*target_path[:path_index+1])
+
+        if current_path == calc_path:
+            tree_files = []
+            for row in tree_view:
+                tp, hsh, filename = row.split(" ")
+                tree_files.append((tp, hsh, filename.replace("\\", "/")))
+            return "tree", tree_files
+        for row in tree_view:
+            tp, hsh, filename = row.split(" ")
+            if filename == calc_path:
+                if tp == "tree":
+                    return self.traverse_tree(repo_id, hsh, target_path,
+                                              current_path=calc_path,
+                                              path_index=path_index + 1)
+                if tp == "blob":
+                    print(hsh)
+                    return "blob", hsh
+
+        return None
+
     def get_current_commit_files(self, repo_id: str, branch_name="main") -> (str, list[()]):
         """Returns a list of the current commit file names"""
         last_commit = read_file(os.path.join(self.main_folder, repo_id, "refs/head", branch_name), binary_=False)
         if last_commit == "":
-            return []
+            return "", []
 
         message, tree_hash, parent = self.extract_commit_data(repo_id, last_commit)
-        print(tree_hash)
         # Traverse tree hash
         tree_view = self.get_server_object(repo_id, tree_hash[:2], tree_hash[2:]).decode().split("\n")
         tree_view.pop()  # Remove blank line
