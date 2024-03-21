@@ -130,8 +130,7 @@ class Actions:
                         continue
                     if entry.is_dir():
                         b.extend(traverse_dirs(entry.path, ignores))
-                    else:
-                        b.append(entry.path)
+                    b.append(entry.path)
                 return b
 
             buffer = traverse_dirs(path)

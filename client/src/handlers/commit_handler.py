@@ -143,11 +143,12 @@ class CommitHandler:
             if it.name == ".stash":
                 continue
             full_path = os.path.join(current_, it.name)
+            if full_path not in files:
+                continue
             if it.is_file():
-                if full_path in files:
-                    sha1 = objects.hash_object(self.repo, read_file(full_path))
-                    leaf = TreeNode(full_path[path_length + 1::], sha1)
-                    entries.append(leaf)
+                sha1 = objects.hash_object(self.repo, read_file(full_path))
+                leaf = TreeNode(full_path[path_length + 1::], sha1)
+                entries.append(leaf)
             else:
                 if len(os.listdir(full_path)) == 0:
                     continue
