@@ -50,7 +50,7 @@ class RemoteConnectionHandler:
         prep_file = prep_file.split("\n")
         del prep_file[-1]
 
-        MAX_DIGIT_SIZE = 7  # 10mb
+        MAX_DIGIT_SIZE = 8  # 12mb
         for row in prep_file:
             sha, obj_type = row.split(" ")
             loc = objects.resolve_object_location(self.full_repo, sha)

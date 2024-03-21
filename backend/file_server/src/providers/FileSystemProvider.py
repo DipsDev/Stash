@@ -58,7 +58,7 @@ class FileSystemProvider:
 
         """
         index = 0
-        MAX_DIGIT_SIZE = 7  # 10mb
+        MAX_DIGIT_SIZE = 8  # 12mb
         while index < len(pack_file):
             sha1 = pack_file[index:index + 40].decode()  # Extract SHA1 hash
             index += 41
