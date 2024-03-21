@@ -10,8 +10,17 @@
 
 
 {% macro file_view(type, file_name) %}
-      <tr class="border-b border-gray-100">
-        <td class="px-4 py-2 text-[#3C8DBC]">{{ file_name | e }}</td>
+      <tr class="border-b border-gray-100 hover:bg-[#F5F5F5]">
+        <td class="px-4 py-2 text-[#3C8DBC] flex flex-row items-center justify-start gap-2">
+            {% if type == "blob" %}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="#ACACAC" viewBox="0 0 16 16" width="16" height="16">
+                <path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z">
+                </path>
+            </svg>
+            {% else %}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="#ACACAC" viewBox="0 0 16 16" width="16" height="16"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path></svg>
+            {% endif %}
+            {{ file_name | e }}</td>
         <td class="px-4 py-2 text-black"></td>
         <td class="px-4 py-2 text-black"></td>
       </tr>
@@ -22,15 +31,15 @@
 
 <script>
     function copy_stash_url() {
-      var copyText = "@{{ request.url.split('/') | last}}.stash"
+      var copyText = "{{ repo.user.username | e }}@{{ request.url.split('/') | last}}.stash"
       navigator.clipboard.writeText(copyText);
     }
 </script>
 
 
 
-<div class="flex flex-col items-start justify-center p-7 mt-5 md:mt-0">
-    <p class="text-[#3E6FB1] text-2xl">{{ repo.user.username | e }} / <span class="font-bold">{{ repo.name | e }}</span></p>
+<div class="w-full flex flex-col items-start justify-center p-7 mt-5 md:mt-0">
+    <p class="text-[#3E6FB1] text-xl">{{ repo.user.username | e }} / <span class="font-semibold">{{ repo.name | e }}</span></p>
 
     {% if files | length == 0 %}
     <h2 class="text-3xl mt-5"><span class="font-semibold">Quick setup</span> - if you've done this kind of thing before</h2>
@@ -52,18 +61,18 @@
         </div>
     </div>
     {% else %}
-    <div class="w-full mt-10">
-        <div class="flex flex-row items-center justify-start gap-3 h-[40px]">
+    <div class="w-full mt-5">
+        <div class="flex flex-row items-center justify-start gap-3 h-[40px] text-sm">
             <span class="bg-[#F4F4F4] px-2 py-1 rounded border text-[#ACACAC]">
                 branch:
-                <select name="branches" class="pl-1 py-1 bg-transparent font-bold text-gray-600 text-[15px]">
+                <select name="branches" class="pl-1 py-1 bg-transparent font-bold text-gray-600">
                   <option value="main">main</option>
                     <option value="dev">dev</option>
                 </select>
             </span>
-            <span class="pl-2 border border-gray-300 rounded my-1 text-gray-300 cursor-pointer" onclick="copy_stash_url()">
-                @{{ request.url.split('/') | last}}.stash
-                <button class="ml-2 p-2 text-[15px] bg-[#F5F5F5] text-gray-600 font-semibold">copy</button>
+            <span class="pl-2 border border-gray-300 rounded my-1 text-gray-300 cursor-pointer text-sm" onclick="copy_stash_url()">
+                {{ repo.user.username | e }}@{{ request.url.split('/') | last}}.stash
+                <button class="ml-2 p-2 bg-[#F5F5F5] text-gray-600 font-semibold">copy</button>
             </span>
 
         </div>
@@ -71,7 +80,7 @@
               <tr class="bg-[#F4F4F4] text-gray-600">
                 <th class="px-4 py-2 text-left text-[#7F7F7F] font-normal">{{ commit_message[:20] }}</th>
                 <th class="px-4 py-2"></th>
-                <th class="px-4 py-2 text-right text-[15px] font-semibold  text-[#7F7F7F]"><span class="font-normal text-[#ACACAC] mr-2">latest commit</span>{{ last_commit[:10] }}</th>
+                <th class="px-4 py-2 text-right"><span class="font-normal text-[#ACACAC] mr-2">latest commit</span>{{ last_commit[:10] }}</th>
               </tr>
                  {% for file in files %}
                  {{ file_view(file[0], file[2]) }}
@@ -91,7 +100,7 @@
 
 
 {% block sidebar %}
-<ol class="flex flex-col items-start justify-center">
+<ol class="flex flex-col items-start justify-center text-sm">
     {% for item in ["Files", "Releases", "Settings"] -%}
         <li class="text-gray-400 w-full">
             <a class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">

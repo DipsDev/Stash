@@ -19,7 +19,7 @@
 {% block sidebar %}
 <ol class="flex flex-col items-start justify-center">
     {% for repo in repos -%}
-        <li class="text-gray-400 w-full">
+        <li class="text-gray-400 w-full text-sm">
             <a class="block px-3 py-3 hover:bg-[#1E282C] w-full" href="{{ url_for('repo.view_repo', username=current_user.username, repo_name=repo.name) }}">
             {{ current_user.username | e }}/<span class="font-semibold text-gray-300 w-full">{{ repo.name | e }}</span>
             </a>
