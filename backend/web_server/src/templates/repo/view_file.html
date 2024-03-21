@@ -21,7 +21,7 @@
 
 
 <div class="w-full flex flex-col items-start justify-center p-7 mt-5 md:mt-0">
-    <p class="text-[#3E6FB1] text-xl">{{ repo.user.username | e }} / <span class="font-semibold">{{ repo.name | e }}</span></p>
+    <p class="text-[#3E6FB1] text-xl">{{ repo.user.username | e }} / <span class="font-semibold">{{ repo.name | e }}/{{ path | e }}</span></p>
 
     <div class="w-full mt-5">
         <div class="flex flex-row items-center justify-start gap-3 h-[40px] text-sm">
@@ -40,17 +40,20 @@
         </div>
          <table class="w-full text-sm text-gray-700 dark:text-gray-400 mt-2">
               <tr class="bg-[#F4F4F4] text-gray-600">
-                <th class="px-4 py-2 text-left text-[#7F7F7F] font-normal">{{ commit_message[:20] }}</th>
+                <th class="px-4 py-2 text-left text-black text-lg font-semibold">{{ path.split("/") | last | e }}</th>
                 <th class="px-4 py-2"></th>
-                <th class="px-4 py-2 text-right"><span class="font-normal text-[#ACACAC] mr-2">latest commit</span>{{ last_commit[:10] }}</th>
+                <th class="px-4 py-2"></th>
               </tr>
         </table>
-        <div>
-            <div class="code border border-[#C0C0C0] mt-1">
-            {% for index, val in file_content %}
-                    <p><span class="bg-[#F5F5F5] py-1 px-2 text-[#6C6C6C] border-r border-r-[#C0C0C0] text-sm">{{ index }}</span> {{ val }}</p>
-            {% endfor %}
-            </div>
+        <div class="code border border-[#C0C0C0] mt-1 h-[600px] overflow-scroll">
+        {% for index, val in file_content %}
+                <p class="flex flex-row items-center justify-start gap-3">
+                    <span class="w-[50px] text-center bg-[#F5F5F5] block py-1 px-2 text-[#6C6C6C] border-r border-r-[#C0C0C0] text-sm">
+                        {{ index }}
+                    </span>
+                    {{ val }}
+                </p>
+        {% endfor %}
         </div>
     </div>
 
@@ -67,12 +70,10 @@
 
 {% block sidebar %}
 <ol class="flex flex-col items-start justify-center text-sm">
-    {% for item in ["Files", "Releases", "Settings"] -%}
-        <li class="text-gray-400 w-full">
-            <a class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
-            {{ item }}
+    <li class="text-gray-400 w-full">
+            <a href="{{ url_for('repo.view_repo', username=repo.user.username, repo_name=repo.name) }}" class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
+                Files
             </a>
-        </li>
-    {%- endfor %}
+    </li>
 </ol>
 {% endblock %}
