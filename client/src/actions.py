@@ -9,8 +9,21 @@ import zlib
 import objects
 from handlers.commit_handler import CommitHandler
 from handlers.remote_connection_handler import RemoteConnectionHandler
-from models.commit import Commit
-from objects import write_file, read_file, hash_object
+from objects import write_file
+
+
+def load_ignore_file(path: str):
+    """Loads an ignore file, to a dictionary"""
+    if not os.path.isdir(path):
+        raise Exception("'path' must be a valid dictionary.")
+    ignore_path = os.path.join(path, ".stashignore")
+    d = {}
+    if os.path.exists(ignore_path):
+        with open(ignore_path, "r") as f:
+            for line in f.read().splitlines():
+                d[line] = True
+
+    return d
 
 
 class Actions:
@@ -102,9 +115,31 @@ class Actions:
 
         index_path = os.path.join(self.full_repo, "index", "d")
         # Load the database
-        indices = pickle.loads(read_file(index_path))
-        # Update the database
-        indices[path] = True
+        indices = pickle.loads(objects.read_file(index_path))
+
+        if os.path.isdir(path):
+            def traverse_dirs(p, ignores=None):
+                if ignores is None:
+                    ignores = {}
+                b = []
+                ignores.update(load_ignore_file(p))
+                for entry in os.scandir(p):
+                    if ignores.get(entry.name) is not None:
+                        continue
+                    if entry.name.startswith(".stash"):
+                        continue
+                    if entry.is_dir():
+                        b.extend(traverse_dirs(entry.path, ignores))
+                    else:
+                        b.append(entry.path)
+                return b
+
+            buffer = traverse_dirs(path)
+            for i in buffer:
+                indices[i] = True
+
+        else:
+            indices[path] = True
 
         write_file(index_path, pickle.dumps(indices))
 
@@ -129,4 +164,3 @@ class Actions:
         d = self.remote_connection_handler.push_pkt("stash-update-head", self.commit_handler.get_head_commit("main"))
         print(d)
         self.remote_connection_handler.close()
-
