@@ -1,5 +1,6 @@
 import os
 import sys
+import zlib
 
 
 def write_file(path, data, binary_=True):
@@ -60,8 +61,8 @@ class FileSystemProvider:
         while index < len(pack_file):
             sha1 = pack_file[index:index + 40].decode()  # Extract SHA1 hash
             index += 41
-            data_length = int(pack_file[index:index + 4].decode())
-            index += 4
+            data_length = int(pack_file[index:index + 6].decode())
+            index += 6
             data_content = pack_file[index:index + data_length]  # Extract data
             index += data_length + 1  # Move index to the next line
             self.create_object(repo_id, sha1, data_content)

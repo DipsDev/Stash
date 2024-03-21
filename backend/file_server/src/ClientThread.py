@@ -1,3 +1,5 @@
+import zlib
+
 from pyDH import pyDH
 
 from backend.file_server.src.providers.AuthenticationProvider import AuthenticationProvider
@@ -24,6 +26,7 @@ class ClientThread:
         self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc)
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__")
         self.repo_id = None
+        self.buffer = []
 
     def __handle_client(self):
         """Handle client command communications"""
@@ -48,7 +51,15 @@ class ClientThread:
                                                                    f" '{'main'}' is up to date")))
             return
 
+        if command_name == ResponseCode.SEND_STREAM.value:
+            # Add to the buffer
+            self.buffer.append(data)
+            return
+
         if command_name == ResponseCode.SEND_PACKFILE.value:
+            if len(self.buffer) > 0:
+                data = zlib.decompress(b"".join(self.buffer))
+                self.buffer.clear()
             try:
                 self.file_system.execute_packfile(self.repo_id, data)
             except Exception as e:

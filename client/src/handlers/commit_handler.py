@@ -27,9 +27,10 @@ class CommitHandler:
         tree = Tree.parse_tree(tree_data_encoded.decode())
         file = f"{tree_hash} tree\n"
         for key, obj in tree.items():
-            file += f"{obj.get_hash()} {obj.get_type()}\n"
             if obj.get_type() == "tree":
                 file += self.generate_prep_file(obj.get_hash())
+            else:
+                file += f"{obj.get_hash()} {obj.get_type()}\n"
         return file
 
     def find_diff(self, commit1_sha: str, commit2_sha: str, remote_=False):

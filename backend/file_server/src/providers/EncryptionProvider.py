@@ -26,7 +26,6 @@ class EncryptionProvider:
     def decrypt_incoming_packet(self) -> bytes:
         """Decrypts incoming packets, uses recv"""
         encrypted_data_length = self.socket.recv(4)
-        print(encrypted_data_length)
         if encrypted_data_length == b'':
             self.socket.close()
             print("Client closed.")

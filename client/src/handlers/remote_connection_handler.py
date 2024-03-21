@@ -54,14 +54,23 @@ class RemoteConnectionHandler:
             sha, obj_type = row.split(" ")
             loc = objects.resolve_object_location(self.full_repo, sha)
             data = objects.read_file(loc, binary_=True)
-            pack_file += f"{sha} {str(len(data)).zfill(4)}".encode() + data + "\n".encode()
+            pack_file += f"{sha} {str(len(data)).zfill(6)}".encode() + data + "\n".encode()
 
         return zlib.compress(pack_file)
 
     def push_pkt(self, code: str, obj: bytes):
         """Sends a pkt file to the server"""
-        pkt = create_pkt_line(code, obj)
-        self.socket.send(self.handler.encrypt_packet(pkt))
+        if len(obj) > 8000:  # Check if data is bigger than max buffer size
+            index = 0
+            while index < len(obj):
+                self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-send-stream", obj[index:index+1010])))
+                index += 1010
+            self.socket.send(self.handler.encrypt_packet(create_pkt_line(code, "end")))
+            return
+
+        else:
+            pkt = create_pkt_line(code, obj)
+            self.socket.send(self.handler.encrypt_packet(pkt))
 
         response_code, data = parse_pkt(self.handler.decrypt_incoming_packet())
         if response_code != "stash-ok":

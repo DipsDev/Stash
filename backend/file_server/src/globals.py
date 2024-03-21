@@ -11,6 +11,7 @@ class ResponseCode(Enum):
     SEND_PACKFILE = "stash-send-packfile"
     OK = "stash-ok"
     UPDATE_HEAD = "stash-update-head"
+    SEND_STREAM = "stash-send-stream"
 
 
 def parse_pkt(data: bytes) -> (str, bytes):
@@ -19,7 +20,7 @@ def parse_pkt(data: bytes) -> (str, bytes):
     header_length = int(data[1:5].decode())
     header = data[5:5 + header_length].decode()
 
-    if not is_compressed:
+    if not is_compressed or header == ResponseCode.SEND_STREAM.value:
         return header, bytes(data[6 + header_length::])
 
     return header, zlib.decompress(bytes(data[6 + header_length::]))
@@ -34,5 +35,3 @@ def create_pkt_line(command_name: ResponseCode, data: str | bytes):
 
     d = f"1{command_name_length}{command_name.value}\n".encode() + data
     return d
-
-
