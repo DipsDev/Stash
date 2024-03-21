@@ -1,6 +1,5 @@
 import os
-import struct
-import zlib
+import sys
 
 
 def write_file(path, data, binary_=True):
@@ -29,7 +28,20 @@ def resolve_object(main_folder, repo_id, sha1) -> bytes:
 
 def resolve_object_location(full_repo, repo_id, obj_hash):
     """resolves an object hash to its path on the disk"""
-    return os.path.join(full_repo, repo_id, "objects", obj_hash[:2], obj_hash[2:])
+    allowed_path = os.path.join(full_repo, repo_id)
+    pth = os.path.join(full_repo, repo_id, "objects", obj_hash[:2], obj_hash[2:])
+    if is_directory_traversal(allowed_path, pth):
+        print("Directory traversal was executed.")
+        sys.exit(1)
+
+    return pth
+
+
+def is_directory_traversal(safe_dir: str, value: str):
+    """Check if the user tried a directory traversal"""
+    if os.path.commonprefix((os.path.realpath(value), safe_dir)) != safe_dir:
+        return True
+    return False
 
 
 class FileSystemProvider:
@@ -67,6 +79,7 @@ class FileSystemProvider:
         """Fetch a web_server object from a remote repository"""
         assert len(s) == 2
         assert len(c) == 38
+
         if not os.path.exists(os.path.join(self.main_folder, repo_id, "objects", s, c)):
             return None
 
