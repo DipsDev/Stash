@@ -50,11 +50,12 @@ class RemoteConnectionHandler:
         prep_file = prep_file.split("\n")
         del prep_file[-1]
 
+        MAX_DIGIT_SIZE = 7  # 10mb
         for row in prep_file:
             sha, obj_type = row.split(" ")
             loc = objects.resolve_object_location(self.full_repo, sha)
             data = objects.read_file(loc, binary_=True)
-            pack_file += f"{sha} {str(len(data)).zfill(6)}".encode() + data + "\n".encode()
+            pack_file += f"{sha} {str(len(data)).zfill(MAX_DIGIT_SIZE)}".encode() + data + "\n".encode()
 
         return zlib.compress(pack_file)
 

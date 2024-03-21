@@ -58,11 +58,12 @@ class FileSystemProvider:
 
         """
         index = 0
+        MAX_DIGIT_SIZE = 7  # 10mb
         while index < len(pack_file):
             sha1 = pack_file[index:index + 40].decode()  # Extract SHA1 hash
             index += 41
-            data_length = int(pack_file[index:index + 6].decode())
-            index += 6
+            data_length = int(pack_file[index:index + MAX_DIGIT_SIZE].decode())
+            index += MAX_DIGIT_SIZE
             data_content = pack_file[index:index + data_length]  # Extract data
             index += data_length + 1  # Move index to the next line
             self.create_object(repo_id, sha1, data_content)
