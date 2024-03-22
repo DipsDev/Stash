@@ -63,9 +63,8 @@ class CLIParser:
 
         # parse the flags
         for _, val in enumerate(sys.argv[1::]):
-            if val.startswith("--"):
-                flags[val[2::]] = True
+            if val.startswith("-"):
+                flags[val.lstrip("-")] = True
             else:
                 params.append(val)
-
         return cmd, params, flags
