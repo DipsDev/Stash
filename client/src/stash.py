@@ -90,7 +90,7 @@ class Stash:
         if self.print_mode:
             return cmt_hash
 
-        Logger.println("stash: changes were committed")
+        Logger.highlight("stash: changes were committed")
         return cmt_hash
 
     @cli_parser.register_command(0)
@@ -122,6 +122,7 @@ class Stash:
             sys.exit(1)
 
         self.branch_handler.local_fast_forward_merge(self.branch_name, wanted_branch)
+        Logger.highlight(f"stash: Successfully merged branches. {wanted_branch} -> {self.branch_name}")
 
     @cli_parser.register_command(-1)
     def branch(self, params: str, flags: dict):
@@ -134,7 +135,7 @@ class Stash:
             branches = self.branch_handler.get_all_branches()
             for branch in branches:
                 if branch == self.branch_name:
-                    Logger.println(f"* {branch}")
+                    Logger.highlight(f"* {branch}")
                 else:
                     Logger.println(f"{branch}")
             sys.exit(1)
@@ -146,11 +147,12 @@ class Stash:
                 sys.exit(1)
 
             self.branch_handler.delete_branch(branch_name=params[0])
-            Logger.println(f"stash: branch '{params[0]}' was successfully deleted.")
+            Logger.highlight(f"stash: branch '{params[0]}' was successfully deleted.")
             sys.exit(1)
 
         self.branch_handler.create_branch(params[0],
                                           last_commit_sha=self.commit_handler.get_head_commit(self.branch_name))
+        Logger.highlight("stash: new branch created.")
 
     @cli_parser.register_command(1)
     def add(self, filename: str):
@@ -199,7 +201,7 @@ class Stash:
         write_file(index_path, pickle.dumps(indices))
 
         if not self.print_mode:
-            Logger.println(f"stash: added {files_added} file(s) to the local repository.")
+            Logger.highlight(f"stash: added {files_added} file(s) to the local repository.")
 
     @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
@@ -229,4 +231,4 @@ class Stash:
         if branch_exists:
             self.branch_handler.load_branch(branch_name)
 
-        Logger.println(f"stash: switched branch, now in {branch_name}.")
+        Logger.highlight(f"stash: switched branch, now in {branch_name}.")

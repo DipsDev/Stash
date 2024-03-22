@@ -48,7 +48,6 @@ class BranchHandler:
         to_commit = self.commit_handler.get_head_commit(local_branch_name2)
         write_file(os.path.join(self.stash_path, "refs", "head", local_branch_name), to_commit, binary_=False)
         self.load_branch(local_branch_name)
-        Logger.println(f"stash: successfully merged branches: '{local_branch_name2}' -> '{local_branch_name}'")
 
     def create_branch(self, name: str, last_commit_sha: str):
         """Creates a branch"""
@@ -62,8 +61,6 @@ class BranchHandler:
 
         # Create the branch if not exists
         write_file(os.path.join(self.stash_path, "refs", "head", name), last_commit_sha, binary_=False)
-
-        Logger.println(f"stash: created branch '{name}'.")
 
     def get_all_branches(self):
         """Returns a list with all the available branches"""
