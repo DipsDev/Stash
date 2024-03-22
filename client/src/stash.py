@@ -5,6 +5,7 @@ import os
 
 from actions import Actions
 from handlers import cli_parser
+from handlers.logger_handler import Logger
 from handlers.remote_connection_handler import RemoteConnectionHandler
 from objects import read_file, write_file
 
@@ -21,8 +22,7 @@ class Stash:
 
         self.repo_path = os.path.join(folder_path, ".stash")
         self.initialized = os.path.exists(self.repo_path)
-        self.remote_handler = RemoteConnectionHandler(url="http://localhost:5000/first-repo.stash",
-                                                      full_repo=self.repo_path)
+        self.remote_handler = RemoteConnectionHandler(full_repo=self.repo_path)
         self.stash_actions = Actions(folder_path, self.remote_handler)
 
         self.current_branch_ref = "refs/head/main"
@@ -43,27 +43,27 @@ class Stash:
         self.initialized = True
         self.current_branch_ref = "refs/head/main"
         if not self.print_mode:
-            print(f'stash: initialized empty repository at {self.folder_path}.')
+            Logger.println(f'stash: initialized empty repository at {self.folder_path}.')
 
     @cli_parser.register_command(1)
     def commit(self, message: str):
         """Record changes to the repository"""
         if not self.initialized:
-            print("stash: repository isn't initialized, use 'stash init'.")
+            Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return ""
 
         cmt_hash = self.stash_actions.commit(message, self.branch_name)
         if self.print_mode:
             return cmt_hash
 
-        print("stash: changes were committed")
+        Logger.println("stash: changes were committed")
         return cmt_hash
 
     @cli_parser.register_command(0)
     def push(self):
         """Update remote refs along with associated objects"""
         if not self.initialized:
-            print("stash: repository isn't initialized, use 'stash init'.")
+            Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
 
         self.stash_actions.push(self.branch_name)
@@ -72,13 +72,13 @@ class Stash:
     def add(self, filename: str):
         """Add file contents to the index"""
         if not self.initialized:
-            print("stash: repository isn't initialized, use 'stash init'.")
+            Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
 
         self.stash_actions.add(filename)
 
         if not self.print_mode:
-            print(f"stash: added {filename} to local repository.")
+            Logger.println(f"stash: added {filename} to local repository.")
 
     @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
@@ -90,12 +90,12 @@ class Stash:
 
         """
         if not self.initialized:
-            print("stash: repository isn't initialized, use 'stash init'.")
+            Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
 
         branch_exists = os.path.exists(os.path.join(self.repo_path, "refs/head", branch_name))
         if not branch_exists and not upsert:
-            print("stash: branch does not exist.")
+            Logger.println("stash: branch does not exist.")
             return
 
         # Create the branch if not exists
@@ -107,4 +107,4 @@ class Stash:
         self.branch_name = branch_name
         self.current_branch_ref = f"refs/head/{branch_name}"
 
-        print(f"stash: switched branch, now in {branch_name}.")
+        Logger.println(f"stash: switched branch, now in {branch_name}.")

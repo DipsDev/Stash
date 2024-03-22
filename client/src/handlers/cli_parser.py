@@ -3,6 +3,8 @@ Exposes the CLIParser class
 """
 import sys
 
+from handlers.logger_handler import Logger
+
 
 def register_command(num_of_params):
     """Register a command automatically"""
@@ -39,19 +41,19 @@ class CLIParser:
     def print_help_message(self, command_name=None):
         """print the help message of a command"""
         if command_name is not None and command_name not in self.commands:
-            print(f"stash: '{command_name}' is not a stash command. See 'stash help'.")
+            Logger.println(f"stash: '{command_name}' is not a stash command. See 'stash help'.")
             return
         if command_name is None:
-            print(self.generate_general_help_message())
+            Logger.println(self.generate_general_help_message())
             return
 
-        print(f"Showing documentation for 'stash {command_name}'")
-        print(self.commands.get(command_name)[1])
+        Logger.println(f"Showing documentation for 'stash {command_name}'")
+        Logger.println(self.commands.get(command_name)[1])
 
     def parse_args(self):
         """Parses the arguments and returns"""
         if len(sys.argv) == 1:
-            print("stash: not enough parameters. See 'stash help'.")
+            Logger.println("stash: not enough parameters. See 'stash help'.")
             sys.exit(1)
         del sys.argv[0]
         cmd = sys.argv[0]

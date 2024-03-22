@@ -2,8 +2,10 @@
 Module that handles cli parsing
 """
 import os
+
 from handlers.cli_parser import CLIParser
 import stash
+from handlers.logger_handler import Logger
 
 
 class CLIHandler:
@@ -28,12 +30,12 @@ class CLIHandler:
             return
 
         if cmd not in av_cmds:
-            print(f"stash: '{cmd}' is not a stash command. See 'stash help'.")
+            Logger.println(f"stash: '{cmd}' is not a stash command. See 'stash help'.")
             return
 
         if av_cmds.get(cmd)[0] != len(params):
-            print(f"stash: '{cmd}' is supposed to receive {av_cmds.get(cmd)[0]} additional parameters,"
-                  f" but got {len(params)} instead. See 'stash help'.")
+            Logger.println(f"stash: '{cmd}' is supposed to receive {av_cmds.get(cmd)[0]} additional parameters,"
+                           f" but got {len(params)} instead. See 'stash help'.")
             return
 
         if cmd == "init":

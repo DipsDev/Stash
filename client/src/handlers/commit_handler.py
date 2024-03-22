@@ -6,6 +6,7 @@ import pickle
 import sys
 
 import objects
+from handlers.logger_handler import Logger
 from handlers.remote_connection_handler import RemoteConnectionHandler
 from models.commit import Commit
 from models.tree import Tree
@@ -44,7 +45,7 @@ class CommitHandler:
         local_data = self.extract_commit_data(commit1_sha)
         remote_head_commit = self.remote_handler.get_remote_head_commit("main")
         if remote_head_commit == "":
-            print("stash: Remote repository is empty. Fetching resources...")
+            Logger.println("stash: Remote repository is empty. Fetching resources...")
             current_commit = self.extract_commit_data(self.get_head_commit("main"))
             d = self.generate_prep_file(current_commit.get_tree_hash()) + f"{commit1_sha} commit\n"
             return d
@@ -52,7 +53,7 @@ class CommitHandler:
         remote_data = self.remote_handler.resolve_remote_commit_data(remote_head_commit)
 
         if remote_data.get_tree_hash() == local_data.get_tree_hash():
-            print("stash: No changes were found.")
+            Logger.println("stash: No changes were found.")
             sys.exit(1)
 
         return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash()) \
@@ -80,13 +81,13 @@ class CommitHandler:
 
         for key, obj in parsed_local.items():
             if key not in parsed_remote:
-                print(f"+ {key}\n")
+                Logger.println(f"+ {key}\n")
                 lines += f"{obj.get_hash()} {obj.get_type()}\n"
                 continue
 
             if obj.get_hash() != parsed_remote.get(key).get_hash():
                 if obj.get_type() == "blob":
-                    print(f"~ {key}\n")
+                    Logger.println(f"~ {key}\n")
                     lines += f"{obj.get_hash()} {obj.get_type()}\n"
                 elif obj.get_type() == "tree":
                     lines += f"{obj.get_hash()} tree\n" + \
@@ -95,7 +96,7 @@ class CommitHandler:
 
         for key, obj in parsed_remote.items():
             if key not in parsed_local:
-                print(f"- {key}\n")
+                Logger.println(f"- {key}\n")
 
         return lines
 

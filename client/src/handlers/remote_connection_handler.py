@@ -5,6 +5,7 @@ import getpass
 
 import objects
 from handlers.encryption_handler import EncryptionHandler
+from handlers.logger_handler import Logger
 from models.commit import Commit
 
 
@@ -34,8 +35,7 @@ def create_pkt_line(command_name: str, data: str | bytes):
 class RemoteConnectionHandler:
     """Handles remote repository connections, and provides useful functions."""
 
-    def __init__(self, full_repo: str, url: str):
-        self.repo_url = url.rstrip("/")
+    def __init__(self, full_repo: str):
         self.full_repo = full_repo
         self.socket = socket.socket()
         self.handler = EncryptionHandler(self.socket)
@@ -118,7 +118,7 @@ class RemoteConnectionHandler:
         temp = self.handler.decrypt_incoming_packet()
         command_name, data = parse_pkt(temp)
         if command_name != "stash-send-object":
-            print("stash: Unexpected error")
+            Logger.println("stash: Unexpected error")
             self.close()
         return data
 
