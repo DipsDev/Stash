@@ -114,6 +114,16 @@ class Stash:
         print(d)
         self.remote_handler.close()
 
+    @cli_parser.register_command(1)
+    def merge(self, wanted_branch: str):
+        """Join two or more development histories together"""
+        if self.branch_name == wanted_branch:
+            Logger.println("stash: cannot merge between two exact branches.")
+            sys.exit(1)
+
+        self.branch_handler.merge_fast_forward(self.commit_handler.get_head_commit(self.branch_name),
+                                               self.commit_handler.get_head_commit(wanted_branch))
+
     @cli_parser.register_command(-1)
     def branch(self, params: str, flags: dict):
         """List, create, or delete branches"""

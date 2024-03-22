@@ -55,3 +55,6 @@ class CLIHandler:
 
         if cmd == "branch":
             self.__stash.branch(params, flags)
+
+        if cmd == "merge":
+            self.__stash.merge(params[0])

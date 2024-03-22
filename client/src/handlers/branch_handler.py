@@ -24,6 +24,24 @@ class BranchHandler:
         if branch_exists:
             os.remove(branch_head_path)
 
+    def merge_fast_forward(self, target: str, commit2: str):
+        """Check if commit2 is an ancestor of commit1, and then fast forwards commit1. """
+        #             main
+        # C0 <- C1 <- C2 <- C3
+        #                  some-branch
+
+        tree_hash = self.commit_handler.extract_commit_data(commit2)
+        pointer = tree_hash.get_parent_hash()
+
+        while pointer != "":
+            print(pointer, target)
+            if pointer == target:
+                Logger.println("Found, can be fast forward!")
+                return
+            pointer = self.commit_handler.extract_commit_data(pointer).get_parent_hash()
+
+        return
+
     def create_branch(self, name: str, last_commit_sha: str):
         """Creates a branch"""
         if not re.compile(r'^[A-Za-z0-9_.-]+$').match(name):
