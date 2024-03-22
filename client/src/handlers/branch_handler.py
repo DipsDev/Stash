@@ -24,8 +24,8 @@ class BranchHandler:
         if branch_exists:
             os.remove(branch_head_path)
 
-    def merge_fast_forward(self, target: str, commit2: str):
-        """Check if commit2 is an ancestor of commit1, and then fast forwards commit1. """
+    def can_fast_forward(self, target: str, commit2: str):
+        """Check if commit2 is an ancestor of target."""
         #             main
         # C0 <- C1 <- C2 <- C3
         #                  some-branch
@@ -34,13 +34,21 @@ class BranchHandler:
         pointer = tree_hash.get_parent_hash()
 
         while pointer != "":
-            print(pointer, target)
             if pointer == target:
-                Logger.println("Found, can be fast forward!")
-                return
+                Logger.println("Fast Forward: ")
+                return True
             pointer = self.commit_handler.extract_commit_data(pointer).get_parent_hash()
 
-        return
+        return False
+
+    def local_fast_forward_merge(self, local_branch_name: str, local_branch_name2: str):
+        """Fast-Forward merge between 2 local branches. local_branch_name -> local_branch_name2. Assumes they can be
+        fast-forwarded merge """
+
+        to_commit = self.commit_handler.get_head_commit(local_branch_name2)
+        write_file(os.path.join(self.stash_path, "refs", "head", local_branch_name), to_commit, binary_=False)
+        self.load_branch(local_branch_name)
+        Logger.println(f"stash: successfully merged branches: '{local_branch_name2}' -> '{local_branch_name}'")
 
     def create_branch(self, name: str, last_commit_sha: str):
         """Creates a branch"""

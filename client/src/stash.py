@@ -121,8 +121,7 @@ class Stash:
             Logger.println("stash: cannot merge between two exact branches.")
             sys.exit(1)
 
-        self.branch_handler.merge_fast_forward(self.commit_handler.get_head_commit(self.branch_name),
-                                               self.commit_handler.get_head_commit(wanted_branch))
+        self.branch_handler.local_fast_forward_merge(self.branch_name, wanted_branch)
 
     @cli_parser.register_command(-1)
     def branch(self, params: str, flags: dict):
