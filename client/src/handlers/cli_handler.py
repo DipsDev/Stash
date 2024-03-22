@@ -52,3 +52,6 @@ class CLIHandler:
 
         if cmd == "push":
             self.__stash.push()
+
+        if cmd == "branch":
+            self.__stash.branch(params[0], flags)

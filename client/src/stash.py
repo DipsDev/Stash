@@ -2,12 +2,30 @@
 Main class
 """
 import os
+import pickle
+import sys
 
-from actions import Actions
+import objects
 from handlers import cli_parser
+from handlers.branch_handler import BranchHandler
+from handlers.commit_handler import CommitHandler
 from handlers.logger_handler import Logger
 from handlers.remote_connection_handler import RemoteConnectionHandler
 from objects import read_file, write_file
+
+
+def load_ignore_file(path: str):
+    """Loads an ignore file, to a dictionary"""
+    if not os.path.isdir(path):
+        raise Exception("'path' must be a valid dictionary.")
+    ignore_path = os.path.join(path, ".stashignore")
+    d = {}
+    if os.path.exists(ignore_path):
+        with open(ignore_path, "r") as f:
+            for line in f.read().splitlines():
+                d[line] = True
+
+    return d
 
 
 class Stash:
@@ -22,8 +40,12 @@ class Stash:
 
         self.repo_path = os.path.join(folder_path, ".stash")
         self.initialized = os.path.exists(self.repo_path)
+        # self.stash_actions = Actions(folder_path, self.remote_handler)
+
+        # Register handlers
+        self.branch_handler = BranchHandler(self.repo_path)
         self.remote_handler = RemoteConnectionHandler(full_repo=self.repo_path)
-        self.stash_actions = Actions(folder_path, self.remote_handler)
+        self.commit_handler = CommitHandler(self.folder_path, self.repo_path, self.remote_handler)
 
         self.current_branch_ref = "refs/head/main"
         self.branch_name = "main"
@@ -39,9 +61,21 @@ class Stash:
             print("stash: repository is initialized, use 'stash help'.")
             return
 
-        self.stash_actions.init()
-        self.initialized = True
-        self.current_branch_ref = "refs/head/main"
+        os.mkdir(self.repo_path)
+        # create the required folders for the database
+        for name in ["objects", "index", "refs", "refs/head"]:
+            os.mkdir(os.path.join(self.repo_path, name))
+
+        # create the required files
+        # indices file, where file indexes are stored
+        write_file(os.path.join(self.repo_path, "index", "d"), pickle.dumps({}))
+
+        # head file, where current commit hash is stored
+        write_file(os.path.join(self.repo_path, "refs/head", "main"), "", binary_=False)
+
+        # Write the current branch to the HEAD file. default: main branch
+        write_file(os.path.join(self.repo_path, "HEAD"), "ref: refs/head/main", binary_=False)
+
         if not self.print_mode:
             Logger.println(f'stash: initialized empty repository at {self.folder_path}.')
 
@@ -52,7 +86,7 @@ class Stash:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return ""
 
-        cmt_hash = self.stash_actions.commit(message, self.branch_name)
+        cmt_hash = self.commit_handler.commit(message=message, branch_name=self.branch_name)
         if self.print_mode:
             return cmt_hash
 
@@ -66,7 +100,28 @@ class Stash:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
 
-        self.stash_actions.push(self.branch_name)
+        current_commit = self.commit_handler.get_head_commit(self.branch_name)
+        assert current_commit != ""
+
+        # fetch the current commit from the web_server
+        # find_diff between the current local version and remote version
+        # send the diff files
+        self.remote_handler.connect()
+        prep_file = self.commit_handler.find_diff(current_commit, "", True)
+        pack_file = self.remote_handler.generate_pack_file(prep_file)
+        self.remote_handler.push_pkt("stash-send-packfile", pack_file)
+        d = self.remote_handler.push_pkt("stash-update-head", self.commit_handler.get_head_commit("main"))
+        print(d)
+        self.remote_handler.close()
+
+    @cli_parser.register_command(1)
+    def branch(self, branch_name: str, flags: dict):
+        """List, create, or delete branches"""
+        if flags.get("-d"):
+            # Delete
+            raise NotImplementedError()
+
+        self.branch_handler.create_branch(branch_name)
 
     @cli_parser.register_command(1)
     def add(self, filename: str):
@@ -75,10 +130,47 @@ class Stash:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
 
-        self.stash_actions.add(filename)
+        path = os.path.join(self.folder_path, filename)
+        path = os.path.normpath(path)
+        # Get the index database
+        if not os.path.exists(path):
+            print("stash: No file was found. Please check your spelling.")
+            sys.exit(1)
+
+        index_path = os.path.join(self.repo_path, "index", "d")
+        # Load the database
+        indices = pickle.loads(objects.read_file(index_path))
+
+        num = 1
+
+        if os.path.isdir(path):
+            def traverse_dirs(p, ignores=None):
+                if ignores is None:
+                    ignores = {}
+                b = []
+                ignores.update(load_ignore_file(p))
+                for entry in os.scandir(p):
+                    if ignores.get(entry.name) is not None:
+                        continue
+                    if entry.name.startswith(".stash"):
+                        continue
+                    if entry.is_dir():
+                        b.extend(traverse_dirs(entry.path, ignores))
+                    b.append(entry.path)
+                return b
+
+            buffer = traverse_dirs(path)
+            num = len(buffer)
+            for i in buffer:
+                indices[i] = True
+
+        else:
+            indices[path] = True
+
+        write_file(index_path, pickle.dumps(indices))
 
         if not self.print_mode:
-            Logger.println(f"stash: added {filename} to local repository.")
+            Logger.println(f"stash: added {num} file(s) to the local repository.")
 
     @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):

@@ -7,6 +7,7 @@ import sys
 import zlib
 
 import objects
+from handlers.branch_handler import BranchHandler
 from handlers.commit_handler import CommitHandler
 from handlers.remote_connection_handler import RemoteConnectionHandler
 from objects import write_file
@@ -68,6 +69,7 @@ class Actions:
         self.full_repo = os.path.join(self.repo, ".stash")
 
         self.commit_handler = CommitHandler(self.repo, self.full_repo, remote_connection_handler)
+        self.branch_handler = BranchHandler(self.repo)
         self.remote_connection_handler = remote_connection_handler
 
     def cat_file(self, hash_id):
@@ -146,6 +148,9 @@ class Actions:
         """commits the changes and saves them locally"""
 
         return self.commit_handler.commit(message, branch_name)
+
+    def branch(self):
+        """Deletes or creates a branch"""
 
     def push(self, branch_name: str):
         """push changes to the cloud"""
