@@ -33,7 +33,7 @@ class CLIHandler:
             Logger.println(f"stash: '{cmd}' is not a stash command. See 'stash help'.")
             return
 
-        if av_cmds.get(cmd)[0] != len(params):
+        if av_cmds.get(cmd)[0] != len(params) and av_cmds.get(cmd)[0] >= 0:
             Logger.println(f"stash: '{cmd}' is supposed to receive {av_cmds.get(cmd)[0]} additional parameters,"
                            f" but got {len(params)} instead. See 'stash help'.")
             return

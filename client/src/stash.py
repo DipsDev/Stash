@@ -43,9 +43,9 @@ class Stash:
         # self.stash_actions = Actions(folder_path, self.remote_handler)
 
         # Register handlers
-        self.branch_handler = BranchHandler(self.folder_path)
         self.remote_handler = RemoteConnectionHandler(full_repo=self.repo_path)
         self.commit_handler = CommitHandler(self.folder_path, self.repo_path, self.remote_handler)
+        self.branch_handler = BranchHandler(self.folder_path, self.commit_handler)
 
         self.current_branch_ref = "refs/head/main"
         self.branch_name = "main"
@@ -114,7 +114,7 @@ class Stash:
         print(d)
         self.remote_handler.close()
 
-    @cli_parser.register_command(0)
+    @cli_parser.register_command(-1)
     def branch(self, params: str, flags: dict):
         """List, create, or delete branches"""
         if not self.initialized:
@@ -130,9 +130,15 @@ class Stash:
                     Logger.println(f"{branch}")
             sys.exit(1)
 
-        if flags.get("-d"):
+        if flags.get("d"):
             # Delete Branch
-            raise NotImplementedError()
+            if params[0] == self.branch_name:
+                Logger.println("stash: cannot delete current working branch, please switch before deleting.")
+                sys.exit(1)
+
+            self.branch_handler.delete_branch(branch_name=params[0])
+            Logger.println(f"stash: branch '{params[0]}' was successfully deleted.")
+            sys.exit(1)
 
         self.branch_handler.create_branch(params[0],
                                           last_commit_sha=self.commit_handler.get_head_commit(self.branch_name))
@@ -210,5 +216,8 @@ class Stash:
 
         write_file(os.path.join(self.repo_path, "HEAD"),
                    f"ref: refs/head/{branch_name}", binary_=False)
+
+        if branch_exists:
+            self.branch_handler.load_branch(branch_name)
 
         Logger.println(f"stash: switched branch, now in {branch_name}.")
