@@ -43,7 +43,7 @@ class Stash:
         # self.stash_actions = Actions(folder_path, self.remote_handler)
 
         # Register handlers
-        self.branch_handler = BranchHandler(self.repo_path)
+        self.branch_handler = BranchHandler(self.folder_path)
         self.remote_handler = RemoteConnectionHandler(full_repo=self.repo_path)
         self.commit_handler = CommitHandler(self.folder_path, self.repo_path, self.remote_handler)
 
@@ -114,14 +114,28 @@ class Stash:
         print(d)
         self.remote_handler.close()
 
-    @cli_parser.register_command(1)
-    def branch(self, branch_name: str, flags: dict):
+    @cli_parser.register_command(0)
+    def branch(self, params: str, flags: dict):
         """List, create, or delete branches"""
+        if not self.initialized:
+            Logger.println("stash: repository isn't initialized, use 'stash init'.")
+            return
+
+        if len(params) == 0:
+            branches = self.branch_handler.get_all_branches()
+            for branch in branches:
+                if branch == self.branch_name:
+                    Logger.println(f"* {branch}")
+                else:
+                    Logger.println(f"{branch}")
+            sys.exit(1)
+
         if flags.get("-d"):
-            # Delete
+            # Delete Branch
             raise NotImplementedError()
 
-        self.branch_handler.create_branch(branch_name)
+        self.branch_handler.create_branch(params[0],
+                                          last_commit_sha=self.commit_handler.get_head_commit(self.branch_name))
 
     @cli_parser.register_command(1)
     def add(self, filename: str):
@@ -141,7 +155,7 @@ class Stash:
         # Load the database
         indices = pickle.loads(objects.read_file(index_path))
 
-        num = 1
+        files_added = 1
 
         if os.path.isdir(path):
             def traverse_dirs(p, ignores=None):
@@ -160,7 +174,7 @@ class Stash:
                 return b
 
             buffer = traverse_dirs(path)
-            num = len(buffer)
+            files_added = len(buffer)
             for i in buffer:
                 indices[i] = True
 
@@ -170,7 +184,7 @@ class Stash:
         write_file(index_path, pickle.dumps(indices))
 
         if not self.print_mode:
-            Logger.println(f"stash: added {num} file(s) to the local repository.")
+            Logger.println(f"stash: added {files_added} file(s) to the local repository.")
 
     @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
@@ -187,16 +201,14 @@ class Stash:
 
         branch_exists = os.path.exists(os.path.join(self.repo_path, "refs/head", branch_name))
         if not branch_exists and not upsert:
-            Logger.println("stash: branch does not exist.")
+            Logger.println(f"stash: branch does not exist. run 'checkout -b {branch_name}' to create a new branch.")
             return
 
         # Create the branch if not exists
         if not branch_exists and upsert:
-            write_file(os.path.join(self.repo_path, "refs", "head", branch_name), "", binary_=False)
+            self.branch_handler.create_branch(branch_name, self.commit_handler.get_head_commit(self.branch_name))
 
         write_file(os.path.join(self.repo_path, "HEAD"),
                    f"ref: refs/head/{branch_name}", binary_=False)
-        self.branch_name = branch_name
-        self.current_branch_ref = f"refs/head/{branch_name}"
 
         Logger.println(f"stash: switched branch, now in {branch_name}.")
