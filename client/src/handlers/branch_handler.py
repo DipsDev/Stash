@@ -67,15 +67,21 @@ class BranchHandler:
         current_cmt = self.commit_handler.get_head_commit(branch_name)
         commit_data = self.commit_handler.extract_commit_data(current_cmt)
 
-        def apply_commit_tree(tree_hash: str):
+        def apply_commit_tree(tree_hash: str, pth=self.folder_path):
             """Applies a commit tree to the cwd"""
             tree_object = objects.resolve_object(self.stash_path, tree_hash).decode()
             parsed_tree = Tree.parse_tree(tree_object)
+
+            to_be_deleted = [i for i in os.listdir(pth) if parsed_tree.get(i) is None and not i.startswith('.stash')]
+
+            for deleted_file in to_be_deleted:
+                os.remove(os.path.join(pth, deleted_file))
+
             for key, obj in parsed_tree.items():
+                pth = os.path.join(self.folder_path, key)
                 if obj.get_type() == "tree":
-                    apply_commit_tree(obj.get_hash())
+                    apply_commit_tree(obj.get_hash(), pth)
                 else:
-                    pth = os.path.join(self.folder_path, key)
                     data = objects.resolve_object(self.stash_path, obj.get_hash())
                     write_file(pth, data=data, binary_=True)
 
