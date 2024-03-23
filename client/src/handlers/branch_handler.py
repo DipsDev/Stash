@@ -107,14 +107,29 @@ class BranchHandler:
         del apply_changes[-1]
         apply_changes_set = set(apply_changes)
 
+        changes = []
+
         # Check for changes, if there are changes for the same file. throw an error of conflict.
         for x in other_changes:
             tp, hsh, pth = x.split(" ")
+            changes.append((tp, hsh, pth))
             if pth in apply_changes_set and tp == "blob":
                 raise NotImplementedError(f"Conflicts are not handled yet. conflict in {pth}.")
 
-        # TODO: Implement
-        raise NotImplementedError("Three-way-merge is not supported yet.")
+        # Upload other_changes files
+        # Commit all files
+        # Reload branch
+
+        for change in changes:
+            file_type, file_hash, file_path = change
+            abs_path = os.path.join(self.folder_path, file_path)
+            if file_type == "tree" and not os.path.exists(abs_path):
+                os.mkdir(abs_path)
+            if file_type == "blob":
+                write_file(abs_path, objects.resolve_object(self.stash_path, file_hash), binary_=True)
+
+        self.commit_handler.commit(f"Merge {to_branch_name} -> {current_branch_name}", current_branch_name)
+        self.load_branch(current_branch_name)
 
     def create_branch(self, name: str, last_commit_sha: str):
         """Creates a branch"""
@@ -139,7 +154,7 @@ class BranchHandler:
         current_cmt = self.commit_handler.get_head_commit(branch_name)
         commit_data = self.commit_handler.extract_commit_data(current_cmt)
 
-        def apply_commit_tree(tree_hash: str, pth=self.folder_path, folder_path_length=len(self.folder_path)+1):
+        def apply_commit_tree(tree_hash: str, pth=self.folder_path, folder_path_length=len(self.folder_path) + 1):
             """Applies a commit tree to the cwd"""
             tree_object = objects.resolve_object(self.stash_path, tree_hash).decode()
             parsed_tree = Tree.parse_tree(tree_object)

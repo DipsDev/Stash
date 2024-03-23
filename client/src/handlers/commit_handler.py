@@ -116,22 +116,28 @@ class CommitHandler:
 
         for key, obj in parsed_h2.items():
             if key not in parsed_h1:
-                lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n"
+                if obj.get_type() == "blob":
+                    lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n"
+                if obj.get_type() == "tree":
+                    lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n" + \
+                             Tree.traverse_tree(self.full_repo, obj.get_hash())
                 continue
 
             if obj.get_hash() != parsed_h1.get(key).get_hash():
                 if obj.get_type() == "blob":
+                    print("blob", obj.get_path())
                     lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n"
                 elif obj.get_type() == "tree":
-                    lines += self._local_find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
+                    lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n" + \
+                             self._local_find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
                 continue
 
-        for key, obj in parsed_h1.items():
-            if key not in parsed_h2:
-                if obj.get_type() == "blob":
-                    lines += f"-{key}\n"
-                if obj.get_type() == "tree":
-                    lines += f"-{key}\n"
+        # for key, obj in parsed_h1.items():
+            # if key not in parsed_h2:
+                # if obj.get_type() == "blob":
+                    # lines += f"-{key}\n"
+                # if obj.get_type() == "tree":
+                    # lines += f"-{key}\n"
 
         return lines
 
