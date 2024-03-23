@@ -45,14 +45,14 @@
                 <th class="px-4 py-2"></th>
               </tr>
         </table>
-        <div class="code border border-[#C0C0C0] mt-1 h-[600px] overflow-scroll">
+        <div class="border border-[#C0C0C0] mt-1 h-[600px] overflow-scroll">
         {% for index, val in file_content %}
-                <p class="flex flex-row items-center justify-start gap-3">
-                    <span class="w-[50px] text-center bg-[#F5F5F5] block py-1 px-2 text-[#6C6C6C] border-r border-r-[#C0C0C0] text-sm">
+                <div class="flex flex-row items-center justify-start gap-3">
+                    <span class="code w-[50px] text-center bg-[#F5F5F5] block py-1 px-2 text-[#6C6C6C] border-r border-r-[#C0C0C0] text-sm">
                         {{ index }}
                     </span>
-                    {{ val }}
-                </p>
+                    <pre class="code">{{ val }}</pre>
+                </div>
         {% endfor %}
         </div>
     </div>
