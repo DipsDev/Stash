@@ -23,7 +23,10 @@ class CommitHandler:
         self.remote_handler = remote_handler
 
     def generate_prep_file(self, tree_hash: str):
-        """Returns a preparefile for the given commit"""
+        """
+        Returns a preparefile for the given commit.
+        prepfile contains all directories, subdirectories and files that the commit contains.
+        """
         tree_data_encoded = objects.resolve_object(self.full_repo, tree_hash)
         tree = Tree.parse_tree(tree_data_encoded.decode())
         file = f"{tree_hash} tree\n"
@@ -113,23 +116,22 @@ class CommitHandler:
 
         for key, obj in parsed_h2.items():
             if key not in parsed_h1:
-                lines += f"+ {key}\n"
+                lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n"
                 continue
 
             if obj.get_hash() != parsed_h1.get(key).get_hash():
                 if obj.get_type() == "blob":
-                    lines += f"~ {key}\n"
+                    lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n"
                 elif obj.get_type() == "tree":
-                    lines += "\n" + \
-                             self._local_find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
+                    lines += self._local_find_tree_diffs(parsed_h1.get(key).get_hash(), obj.get_hash())
                 continue
 
         for key, obj in parsed_h1.items():
             if key not in parsed_h2:
                 if obj.get_type() == "blob":
-                    lines += f"- {key}\n"
+                    lines += f"-{key}\n"
                 if obj.get_type() == "tree":
-                    lines += f"- {key}\n"
+                    lines += f"-{key}\n"
 
         return lines
 

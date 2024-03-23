@@ -9,7 +9,7 @@ import objects
 from handlers import cli_parser
 from handlers.branch_handler import BranchHandler
 from handlers.commit_handler import CommitHandler
-from handlers.logger_handler import Logger
+from handlers.logger_handler import Logger, ColorCode
 from handlers.remote_connection_handler import RemoteConnectionHandler
 from objects import read_file, write_file
 
@@ -121,8 +121,15 @@ class Stash:
             Logger.println("stash: cannot merge between two exact branches.")
             sys.exit(1)
 
-        self.branch_handler.local_fast_forward_merge(self.branch_name, wanted_branch)
+        if self.branch_handler.can_fast_forward(self.branch_name, wanted_branch):
+            Logger.custom("Fast Forward:", ColorCode.CITALIC)
+            self.branch_handler.local_fast_forward_merge(self.branch_name, wanted_branch)
+
+        else:
+            Logger.custom("Three Way Merge: ", ColorCode.CITALIC)
+            self.branch_handler.local_three_way_merge(self.branch_name, wanted_branch)
         Logger.highlight(f"stash: Successfully merged branches. {wanted_branch} -> {self.branch_name}")
+
 
     @cli_parser.register_command(-1)
     def branch(self, params: str, flags: dict):
