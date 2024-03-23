@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import sys
 
 import objects
@@ -80,11 +81,17 @@ class BranchHandler:
             to_be_deleted = [i for i in os.listdir(pth) if parsed_tree.get(i) is None and not i.startswith('.stash')]
 
             for deleted_file in to_be_deleted:
-                os.remove(os.path.join(pth, deleted_file))
+                deleted_file_path = os.path.join(pth, deleted_file)
+                if os.path.isdir(deleted_file_path):
+                    shutil.rmtree(deleted_file_path)
+                else:
+                    os.remove(deleted_file_path)
 
             for key, obj in parsed_tree.items():
                 pth = os.path.join(self.folder_path, key)
                 if obj.get_type() == "tree":
+                    if not os.path.exists(pth):
+                        os.mkdir(pth)
                     apply_commit_tree(obj.get_hash(), pth)
                 else:
                     data = objects.resolve_object(self.stash_path, obj.get_hash())

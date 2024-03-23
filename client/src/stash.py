@@ -178,7 +178,7 @@ class Stash:
             def traverse_dirs(p, ignores=None):
                 if ignores is None:
                     ignores = {}
-                b = []
+                b = [p]
                 ignores.update(load_ignore_file(p))
                 for entry in os.scandir(p):
                     if ignores.get(entry.name) is not None:
@@ -191,11 +191,12 @@ class Stash:
                 return b
 
             buffer = traverse_dirs(path)
-            files_added = len(buffer)
+            files_added = len(buffer) - 1
             for i in buffer:
                 indices[i] = True
 
         else:
+            indices[os.path.dirname(path)] = True
             indices[path] = True
 
         write_file(index_path, pickle.dumps(indices))
@@ -231,4 +232,4 @@ class Stash:
         if branch_exists:
             self.branch_handler.load_branch(branch_name)
 
-        Logger.highlight(f"stash: switched branch, now in {branch_name}.")
+        Logger.highlight(f"stash: switched branch, now in '{branch_name}'.")
