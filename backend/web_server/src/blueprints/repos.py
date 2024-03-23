@@ -93,5 +93,12 @@ def view_repo_contents(username: str, repo_name: str, path: str):
         file_content = file_system.get_server_object(current_repo.id, data[:2], data[2:])
         if file_content is None:
             abort(404)
+        try:
+            content = file_content.decode().split("\n")
+            valid_encoding = True
+        except UnicodeDecodeError:
+            content = []
+            valid_encoding = False
         return render_template("repo/view_file.html", repo=current_repo, path=path,
-                               file_content=enumerate(file_content.decode().split("\n")), commit_message="", last_commit="")
+                               file_content=enumerate(content), commit_message="", last_commit="",
+                               valid_encoding=valid_encoding)

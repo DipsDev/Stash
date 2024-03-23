@@ -114,6 +114,7 @@ class BranchHandler:
                 raise NotImplementedError(f"Conflicts are not handled yet. conflict in {pth}.")
 
         # TODO: Implement
+        raise NotImplementedError("Three-way-merge is not supported yet.")
 
     def create_branch(self, name: str, last_commit_sha: str):
         """Creates a branch"""
