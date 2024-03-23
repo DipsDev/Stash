@@ -125,7 +125,6 @@ class CommitHandler:
 
             if obj.get_hash() != parsed_h1.get(key).get_hash():
                 if obj.get_type() == "blob":
-                    print("blob", obj.get_path())
                     lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n"
                 elif obj.get_type() == "tree":
                     lines += f"{obj.get_type()} {obj.get_hash()} {obj.get_path()}\n" + \
