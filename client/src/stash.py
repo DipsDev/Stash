@@ -66,6 +66,7 @@ class Stash:
 
         Flags:
             None
+
         """
         if self.initialized:
             print("stash: repository is initialized, use 'stash help'.")
@@ -101,6 +102,10 @@ class Stash:
 
         Flags:
             None
+
+        Examples:
+            'stash commit "Initial Commit"'
+                Records the changes to the current working repository.
         """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
@@ -228,6 +233,13 @@ class Stash:
         Flags:
             None
 
+        Examples:
+            'stash add .'
+                Adds all files in the current directory.
+
+            'stash add files'
+                Adds all files in the 'files' directory.
+
         """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
@@ -289,6 +301,11 @@ class Stash:
         Flags:
             -b <new_branch>
             Create a new branch named <new_branch> and switch to it;
+
+        Examples:
+            'stash checkout -b dev'
+                Creates a 'dev' branch, and switches to it
+
         """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
