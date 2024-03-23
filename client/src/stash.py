@@ -56,7 +56,17 @@ class Stash:
 
     @cli_parser.register_command(0)
     def init(self):
-        """Create an empty Stash repository or reinitialize an existing one"""
+        """
+        Create an empty Stash repository or reinitialize an existing one
+        stash init
+
+        Description:
+            Initializes the repository and creates needed objects.
+            This command must be used before using any other command, and will throw an error if not.
+
+        Flags:
+            None
+        """
         if self.initialized:
             print("stash: repository is initialized, use 'stash help'.")
             return
@@ -81,7 +91,17 @@ class Stash:
 
     @cli_parser.register_command(1)
     def commit(self, message: str):
-        """Record changes to the repository"""
+        """
+        Record changes to the repository
+        stash commit <message>
+
+        Description:
+            Records local changes to the repository.
+            This command may be used before pushing the changes to the remote server.
+
+        Flags:
+            None
+        """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return ""
@@ -95,7 +115,19 @@ class Stash:
 
     @cli_parser.register_command(0)
     def push(self):
-        """Update remote refs along with associated objects"""
+        """
+        Update remote refs along with associated objects
+        stash push
+
+        Description:
+            Updates remote refs and sends associated objects.
+            You'll be prompted to enter repository fingerprint and correlated password.
+            All changes will be shown in the stash webserver.
+
+
+        Flags:
+            None
+        """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
@@ -116,7 +148,18 @@ class Stash:
 
     @cli_parser.register_command(1)
     def merge(self, wanted_branch: str):
-        """Join two or more development histories together"""
+        """
+        Join two or more development histories together
+        stash merge <branch_name>
+
+        Description:
+            Joins two development branches together.
+            Merging has two ways of merging: Fast-Forward and Three-Way Merge.
+            Conflicts between the two branches might be thrown. if that's the case, conflicts must be solved manually.
+
+        Flags:
+            None
+        """
         if self.branch_name == wanted_branch:
             Logger.println("stash: cannot merge between two exact branches.")
             sys.exit(1)
@@ -130,10 +173,21 @@ class Stash:
             self.branch_handler.local_three_way_merge(self.branch_name, wanted_branch)
         Logger.highlight(f"stash: Successfully merged branches. {wanted_branch} -> {self.branch_name}")
 
-
     @cli_parser.register_command(-1)
     def branch(self, params: str, flags: dict):
-        """List, create, or delete branches"""
+        """
+        List, create, or delete branches
+        stash branch [-d] [<branch_name>]
+
+        Description:
+            Creates or deletes a branch.
+            If no <branch_name> was provided, stash will display all available branches, as well as the current working one.
+            This command CANNOT be used to switch branches. for switching, use stash checkout.
+
+        Flags:
+            -d <existing_branch>
+            Deletes the branch with the name <branch_name>. cannot be used if this is the currently working branch.
+        """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
@@ -163,7 +217,18 @@ class Stash:
 
     @cli_parser.register_command(1)
     def add(self, filename: str):
-        """Add file contents to the index"""
+        """
+        Add file contents to the index
+        stash add <filename / folder>
+
+        Description:
+            Adds given file or folder contents to the index. can be provided with a relative to a folder (ex: '.').
+            Create a .stashignore file in a folder to restrict adding of some files inside the same folder, or other nested ones.
+
+        Flags:
+            None
+
+        """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
@@ -213,12 +278,17 @@ class Stash:
 
     @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
-        """Switch branches or restore working tree files
+        """
+        Switch branches or restore working tree files
+        stash checkout [-b] <branch>
 
-        Updates files in the working tree to match the version in the index or the specified tree.
-        If no pathspec was given,
-            git checkout will also update HEAD to set the specified branch as the current branch.
+        Description:
+            Switches branches or restores working tree files.
+            if some unwanted files were deleted, you may use this command to restore to the last branch commit.
 
+        Flags:
+            -b <new_branch>
+            Create a new branch named <new_branch> and switch to it;
         """
         if not self.initialized:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")

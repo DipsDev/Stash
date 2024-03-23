@@ -33,7 +33,7 @@ class CLIParser:
         fnl_string = "These are common Stash command:\n\n"
         for func_name, (_, docstring) in self.commands.items():
             fnl_string += f" {func_name}{' ' * (15 - len(func_name))}" +\
-                          docstring.split("\n")[0] + "\n"
+                          docstring.split("\n")[1] + "\n"
 
         fnl_string += "\nSee 'stash help <command>' to read about a specific subcommand."
         return fnl_string
