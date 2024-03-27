@@ -57,7 +57,7 @@ class CommitHandler:
 
         if remote_data.get_tree_hash() == local_data.get_tree_hash():
             Logger.println("stash: No changes were found.")
-            sys.exit(1)
+            exit(1)
 
         return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash()) \
                + f"{commit1_sha} commit\n"

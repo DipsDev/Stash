@@ -76,7 +76,7 @@ class RemoteConnectionHandler:
         response_code, data = parse_pkt(self.handler.decrypt_incoming_packet())
         if response_code != "stash-ok":
             print(data)
-            sys.exit(1)
+            exit(1)
         return data
 
     def connect(self):
@@ -98,7 +98,7 @@ class RemoteConnectionHandler:
     def close(self):
         """Closes the connection to the web_server"""
         self.socket.close()
-        sys.exit(1)
+        exit(0)
 
     def get_remote_head_commit(self, branch: str):
         """Get remote head commit"""

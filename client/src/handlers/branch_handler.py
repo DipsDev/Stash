@@ -69,7 +69,7 @@ class BranchHandler:
 
         if current_latest_head == head_2:
             Logger.error("stash: can't merge branches. they are the same.")
-            sys.exit(1)
+            exit(1)
 
         # Find the intersection point of the two branches
         pnt1 = current_latest_head
@@ -93,7 +93,7 @@ class BranchHandler:
 
         if mutual_commit_hash == "":
             Logger.error("stash: couldn't merge branches. No mutual commit was found.")
-            sys.exit(1)
+            exit(1)
 
         # Find what's changed between both branches to the mutual commit hash,
         # If there are changes at the same file, throw an error saying there's a conflict.
@@ -135,11 +135,11 @@ class BranchHandler:
         """Creates a branch"""
         if not re.compile(r'^[A-Za-z0-9_.-]+$').match(name):
             Logger.println("stash: branch names cannot contain special characters or spaces.")
-            sys.exit(1)
+            exit(1)
         branch_exists = os.path.exists(os.path.join(self.stash_path, "refs/head", name))
         if branch_exists:
             Logger.println(f"stash: branch '{name}' already exists")
-            sys.exit(1)
+            exit(1)
 
         # Create the branch if not exists
         write_file(os.path.join(self.stash_path, "refs", "head", name), last_commit_sha, binary_=False)

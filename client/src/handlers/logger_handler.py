@@ -1,3 +1,4 @@
+import abc
 import sys
 from enum import Enum
 
@@ -48,38 +49,70 @@ class ColorCode(Enum):
     CWHITEBG2 = '\33[107m'
 
 
+class Printer(abc.ABC):
+
+    @abc.abstractmethod
+    def write(self, content: str):
+        pass
+
+    def clear(self):
+        pass
+
+
+class OutPrinter(Printer):
+
+    def write(self, content: str):
+        sys.stdout.write(content)
+        sys.stdout.flush()
+
+
+class TestPrinter(Printer):
+    std = []
+
+    def write(self, content: str):
+        self.std.append(content)
+
+    def get_std(self):
+        return self.std
+
+    def clear(self):
+        self.std.clear()
+
+
 class Logger:
     """A singleton class that handles printing to the terminal"""
+
+    printer: Printer = OutPrinter()
+
+    @classmethod
+    def set_printer(cls, other: Printer):
+        """Updates a printer"""
+        cls.printer = other
 
     @classmethod
     def replace_and_print(cls, content: str):
         """Removes the current line on the screen, and update it's content"""
-        sys.stdout.write('\r' + content)
-        sys.stdout.flush()
+        cls.printer.write('\r' + content)
 
     @classmethod
     def println(cls, content: str):
         """Prints a new line"""
-        sys.stdout.write(content + '\n')
-        sys.stdout.flush()
+        cls.printer.write(content + '\n')
 
     @classmethod
     def custom(cls, content: str, color: ColorCode):
         """Prints out a custom colored line"""
-        sys.stdout.write(color.value + content + ColorCode.CEND.value + '\n')
-        sys.stdout.flush()
+        cls.printer.write(color.value + content + ColorCode.CEND.value + '\n')
 
     @classmethod
     def error(cls, content: str):
         """Prints out an error line"""
-        sys.stdout.write(ColorCode.CRED.value + content + ColorCode.CEND.value + '\n')
-        sys.stdout.flush()
+        cls.printer.write(ColorCode.CRED.value + content + ColorCode.CEND.value + '\n')
 
     @classmethod
     def highlight(cls, content: str):
         """Prints out a highlighted line"""
-        sys.stdout.write(ColorCode.CBLUE.value + content + ColorCode.CEND.value + '\n')
-        sys.stdout.flush()
+        cls.printer.write(ColorCode.CBLUE.value + content + ColorCode.CEND.value + '\n')
 
     @classmethod
     def print_counter_numbers(cls, content: str, current=int, target=int):

@@ -89,6 +89,7 @@ class Stash:
 
         if not self.print_mode:
             Logger.println(f'stash: initialized empty repository at {self.folder_path}.')
+            self.initialized = True  # Important for tests
 
     @cli_parser.register_command(1)
     def commit(self, message: str):
@@ -167,7 +168,7 @@ class Stash:
         """
         if self.branch_name == wanted_branch:
             Logger.println("stash: cannot merge between two exact branches.")
-            sys.exit(1)
+            exit(1)
 
         if self.branch_handler.can_fast_forward(self.branch_name, wanted_branch):
             Logger.custom("Fast Forward:", ColorCode.CITALIC)
@@ -204,17 +205,17 @@ class Stash:
                     Logger.highlight(f"* {branch}")
                 else:
                     Logger.println(f"{branch}")
-            sys.exit(1)
+            exit(1)
 
         if flags.get("d"):
             # Delete Branch
             if params[0] == self.branch_name:
                 Logger.println("stash: cannot delete current working branch, please switch before deleting.")
-                sys.exit(1)
+                exit(1)
 
             self.branch_handler.delete_branch(branch_name=params[0])
             Logger.highlight(f"stash: branch '{params[0]}' was successfully deleted.")
-            sys.exit(1)
+            exit(1)
 
         self.branch_handler.create_branch(params[0],
                                           last_commit_sha=self.commit_handler.get_head_commit(self.branch_name))
@@ -250,7 +251,7 @@ class Stash:
         # Get the index database
         if not os.path.exists(path):
             print("stash: No file was found. Please check your spelling.")
-            sys.exit(1)
+            exit(1)
 
         index_path = os.path.join(self.repo_path, "index", "d")
         # Load the database
@@ -289,6 +290,28 @@ class Stash:
             Logger.highlight(f"stash: added {files_added} file(s) to the local repository.")
 
     @cli_parser.register_command(1)
+    def clone(self, repo_fingerprint: str):
+        """
+        Clone a repository into a new directory
+        stash clone <repository_fingerprint> [local_path]
+
+        Description:
+            Clones a remote repository, into a given directory.:
+            if [local_path] is undefined, it uses the current working directory instead.
+            <repository_fingerprint> should be in the following format: author_username@repositry_name
+
+        Flags:
+            None:
+
+        Examples:
+            'stash clone gamer@helloworld'
+                Clones the repository 'helloworld', created by user 'gamer', to the current working directory.
+
+        """
+
+        # Fetch main branch from 
+
+    @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
         """
         Switch branches or restore working tree files
@@ -325,5 +348,8 @@ class Stash:
 
         if branch_exists:
             self.branch_handler.load_branch(branch_name)
+
+        self.current_branch_ref = f"ref: refs/head/{branch_name}"  # Important for tests
+        self.branch_name = branch_name
 
         Logger.highlight(f"stash: switched branch, now in '{branch_name}'.")
