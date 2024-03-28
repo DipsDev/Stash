@@ -21,6 +21,7 @@ class BranchingTest(unittest.TestCase):
         Logger.set_printer(TestPrinter())
 
     def tearDown(self) -> None:
+        print(Logger.printer.get_std())
         shutil.rmtree(self.test_dir_path)
 
     def test_no_branch(self):
@@ -180,6 +181,26 @@ class BranchingTest(unittest.TestCase):
 
         self.assertListEqual([".stash", "test_file.txt", "test_file2.txt", "test_file3.txt", "test_file4.txt"],
                              os.listdir(self.test_dir_path))
+
+        # Check if merging after merging is avaliable
+        self.stash.checkout("new_branch", upsert=True)
+        with open(os.path.join(self.test_dir_path, "test_file5.txt"), "w") as f:
+            f.write("Hello World!")
+
+        self.stash.add('.')
+        self.stash.commit("c3")
+
+        self.stash.checkout("main")
+        with open(os.path.join(self.test_dir_path, "test_file6.txt"), "w") as f:
+            f.write("Hello World!")
+
+        self.stash.add('.')
+        self.stash.commit("c3")
+        self.stash.merge("new_branch")
+
+        self.assertListEqual(
+            [".stash", "test_file.txt", "test_file2.txt", "test_file3.txt", "test_file4.txt", "test_file5.txt",
+             "test_file6.txt"], os.listdir(self.test_dir_path))
 
 
 if __name__ == "__main__":
