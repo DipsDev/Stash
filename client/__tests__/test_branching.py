@@ -21,7 +21,6 @@ class BranchingTest(unittest.TestCase):
         Logger.set_printer(TestPrinter())
 
     def tearDown(self) -> None:
-        print(Logger.printer.get_std())
         shutil.rmtree(self.test_dir_path)
 
     def test_no_branch(self):
