@@ -142,7 +142,10 @@ class CommitHandler:
 
     def get_head_commit(self, branch_name):
         """Returns the head commit hash by branch name"""
-        return read_file(os.path.join(self.full_repo, "refs/head", branch_name), binary_=False)
+        pth = os.path.join(self.full_repo, "refs/head", branch_name)
+        if not os.path.exists(pth):
+            raise FileNotFoundError("Branch cannot be found")
+        return read_file(pth, binary_=False)
 
     def create_tree(self, files: dict, path_length, current_):
         """Creates a new commit tree"""

@@ -35,7 +35,7 @@ class BranchingTest(unittest.TestCase):
 
         self.stash.commit("Initial Commit")
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(FileNotFoundError):
             self.stash.merge("not-exists")
 
     def test_simple_loading(self):
