@@ -119,8 +119,8 @@ class Stash:
         Logger.highlight("stash: changes were committed")
         return cmt_hash
 
-    @cli_parser.register_command(0)
-    def push(self):
+    @cli_parser.register_command(-1)
+    def push(self, given_repo_fingerprint=None):
         """
         Update remote refs along with associated objects
         stash push
@@ -144,7 +144,7 @@ class Stash:
         # fetch the current commit from the web_server
         # find_diff between the current local version and remote version
         # send the diff files
-        self.remote_handler.connect()
+        self.remote_handler.connect(given_repo_fingerprint)
         prep_file = self.commit_handler.find_diff(current_commit, "", True)
         pack_file = self.remote_handler.generate_pack_file(prep_file)
         self.remote_handler.push_pkt("stash-send-packfile", pack_file)

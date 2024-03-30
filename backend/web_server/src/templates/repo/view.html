@@ -42,28 +42,30 @@
 
 <div class="w-full flex flex-col items-start justify-center p-7 mt-5 md:mt-0">
     <p class="text-[#3E6FB1] text-xl">{{ repo.user.username | e }} /
-        <span class="font-semibold">{{ repo.name | e }}/{{ "/".join(request.path.split("/")[3:]) | e }}</span></p>
+        <span class="font-semibold">{{ repo.name | e }}/{{ "/".join(request.path.split("/")[3:]) | e }}</span>
+    </p>
 
     {% if files | length == 0 %}
     <h2 class="text-3xl mt-5"><span class="font-semibold">Quick setup</span> - if you've done this kind of thing before</h2>
-    <p class="mt-2">via HTTP</p>
+    <p class="mt-2">via TCP</p>
     <div class="mt-7 w-full">
         <h4 class="text-2xl mb-2">Create a new repository from the command line</h4>
         <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
-            <code>touch README.md <br/></code>
+            <code>echo "# Hello World" >> touch README.md <br/></code>
             <code>stash init <br/></code>
             <code>stash add README.md <br/></code>
-            <code>git commit "first commit" <br/></code>
-            <code>git push</code>
+            <code>stash commit "first commit" <br/></code>
+            <code>stash push {{ repo.user.username }}@{{ repo.name | e }}</code>
         </div>
     </div>
     <div class="mt-7 w-full">
         <h4 class="text-2xl mb-2">Push an existing repository from the command line</h4>
         <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
-            <code>git push</code>
+            <code>stash push {{ repo.user.username }}@{{ repo.name | e }}</code>
         </div>
     </div>
     {% else %}
+    <p class="mt-2 w-2/4">{{ repo.description }}</p>
     <div class="w-full mt-5">
         <div class="flex flex-row items-center justify-start gap-3 h-[40px] text-sm">
             <span class="bg-[#F4F4F4] px-2 py-1 rounded border text-[#ACACAC]">

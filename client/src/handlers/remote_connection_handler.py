@@ -79,13 +79,14 @@ class RemoteConnectionHandler:
             exit(1)
         return data
 
-    def connect(self):
+    def connect(self, repo_fingerprint: str | None):
         """Connect to remote web_server"""
         self.socket.connect(('127.0.0.1', 8838))
 
         self.handler.exchange_keys()
 
-        username = input("stash: Please provide your stash fingerprint (ex: username@repository.stash): ")
+        username = repo_fingerprint if repo_fingerprint else input("stash: Please provide your stash fingerprint (ex: "
+                                                                   "username@repository.stash): ")
         password = getpass.getpass(f"{username}'s password: ")
 
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", f"{username}@{password}")))
