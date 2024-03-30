@@ -2,10 +2,8 @@ import zlib
 
 from pyDH import pyDH
 
-from backend.file_server.src.providers.AuthenticationProvider import AuthenticationProvider
-from backend.file_server.src.providers.EncryptionProvider import EncryptionProvider
+from providers import AuthenticationProvider, EncryptionProvider, FileSystemProvider
 from globals import parse_pkt, create_pkt_line, ResponseCode
-from providers.FileSystemProvider import FileSystemProvider
 
 
 ###
@@ -24,8 +22,8 @@ class ClientThread:
         self.df = pyDH.DiffieHellman()
         self.enc = EncryptionProvider(self.conn)
         self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc)
-        self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__")
         self.repo_id = None
+        self.file_system = None
         self.buffer = []
 
     def __handle_client(self):
@@ -34,18 +32,18 @@ class ClientThread:
 
         if command_name == ResponseCode.RECEIVE_OBJECT.value:
             data = data.decode()
-            data = self.file_system.get_server_object(self.repo_id, data[:2], data[2:])
+            data = self.file_system.get_server_object(data[:2], data[2:])
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
 
         if command_name == ResponseCode.RECEIVE_HEAD_COMMIT.value:
             data = data.decode()
-            data = self.file_system.get_head_commit(self.repo_id, data)
+            data = self.file_system.get_head_commit(data)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.SEND_OBJECT, data)))
             return
 
         if command_name == ResponseCode.UPDATE_HEAD.value:
-            self.file_system.update_head_commit(self.repo_id, "main", data.decode())
+            self.file_system.update_head_commit("main", data.decode())
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
                                                                    f"stash: Remote branch updated."
                                                                    f" '{'main'}' is up to date")))
@@ -61,7 +59,7 @@ class ClientThread:
                 data = zlib.decompress(b"".join(self.buffer))
                 self.buffer.clear()
             try:
-                self.file_system.execute_packfile(self.repo_id, data)
+                self.file_system.execute_packfile(data)
             except Exception as e:
                 print(e)
                 self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: Uploading failed")))
@@ -79,6 +77,7 @@ class ClientThread:
 
         # Authenticate user
         self.repo_id = self.auth.authenticate_user()
+        self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__", self.repo_id)
 
         while True:
             self.__handle_client()

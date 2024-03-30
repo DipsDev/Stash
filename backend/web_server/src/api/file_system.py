@@ -1,6 +1,7 @@
 import os
-import sys
 import zlib
+
+from filelock import FileLock
 
 
 def write_file(path, data, binary_=True):
@@ -44,6 +45,9 @@ class FileSystem:
     def __init__(self, storage_path: str):
         self.main_folder = storage_path
 
+    def craft_lock(self, repo_id: str):
+        return FileLock(os.path.join(self.main_folder, repo_id, "lock"), timeout=3)
+
     def get_server_object(self, repo_id: str, s: str, c: str):
         """Fetch a web_server object from a remote repository"""
         assert len(s) == 2
@@ -67,8 +71,12 @@ class FileSystem:
         head_commit_path = os.path.join(self.main_folder, repo_id, "refs/head", branch)
         if not os.path.exists(head_commit_path):
             return None
-        cmt = read_file(head_commit_path, binary_=False)
-        return cmt
+
+        repo_lock = self.craft_lock(repo_id)
+
+        with repo_lock:
+            cmt = read_file(head_commit_path, binary_=False)
+            return cmt
 
     def extract_commit_data(self, repo_id: str, sha1) -> tuple:
         """Extracts the commit data, given its hash value"""
@@ -106,7 +114,7 @@ class FileSystem:
 
         tree_view = self.get_server_object(repo_id, sha1[:2], sha1[2:]).decode().split("\n")
         tree_view.pop()
-        calc_path = os.path.join(*target_path[:path_index+1])
+        calc_path = os.path.join(*target_path[:path_index + 1])
 
         if current_path == calc_path:
             tree_files = []
@@ -148,16 +156,17 @@ class FileSystem:
         """Allocates a new repository in the filesystem"""
         os.mkdir(os.path.join(self.main_folder, repo_id))
 
-        # create the required folders for the database
-        for name in ["objects", "index", "refs", "refs/head"]:
-            os.mkdir(os.path.join(self.main_folder, repo_id, name))
+        with self.craft_lock(repo_id):
+            # create the required folders for the database
+            for name in ["objects", "index", "refs", "refs/head"]:
+                os.mkdir(os.path.join(self.main_folder, repo_id, name))
 
-        # create the required files
-        # indices file, where file indexes are stored
-        # write_file(os.path.join(self.main_folder, repo_id, "index", "d"), pickle.dumps({}))
+            # create the required files
+            # indices file, where file indexes are stored
+            # write_file(os.path.join(self.main_folder, repo_id, "index", "d"), pickle.dumps({}))
 
-        # head file, where current commit hash is stored
-        write_file(os.path.join(self.main_folder, repo_id, "refs/head", "main"), "", binary_=False)
+            # head file, where current commit hash is stored
+            write_file(os.path.join(self.main_folder, repo_id, "refs/head", "main"), "", binary_=False)
 
-        # Write the current branch to the HEAD file. default: main branch
-        write_file(os.path.join(self.main_folder, repo_id, "HEAD"), "ref: refs/head/main", binary_=False)
+            # Write the current branch to the HEAD file. default: main branch
+            write_file(os.path.join(self.main_folder, repo_id, "HEAD"), "ref: refs/head/main", binary_=False)

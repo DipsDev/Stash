@@ -1,6 +1,6 @@
 import os
-import sys
-import zlib
+
+from filelock import FileLock
 
 
 def write_file(path, data, binary_=True):
@@ -33,24 +33,23 @@ def resolve_object_location(full_repo, repo_id, obj_hash):
     pth = os.path.join(full_repo, repo_id, "objects", obj_hash[:2], obj_hash[2:])
     if is_directory_traversal(allowed_path, pth):
         print("Directory traversal was executed.")
-        sys.exit(1)
+        quit(1)
 
     return pth
 
 
 def is_directory_traversal(safe_dir: str, value: str):
     """Check if the user tried a directory traversal"""
-    if os.path.commonprefix((os.path.realpath(value), safe_dir)) != safe_dir:
-        return True
-    return False
+    return os.path.commonprefix((os.path.realpath(value), safe_dir)) != safe_dir
 
 
 class FileSystemProvider:
-
-    def __init__(self, storage_path: str):
+    def __init__(self, storage_path: str, repo_id: str):
         self.main_folder = storage_path
+        self.repo_id = repo_id
+        self.lock = FileLock(os.path.join(self.main_folder, repo_id, "lock"), timeout=5)
 
-    def execute_packfile(self, repo_id: str, pack_file: bytes) -> (str, bytes):
+    def execute_packfile(self, pack_file: bytes) -> (str, bytes):
         """
         Decompiles the packfile, to usable form
 
@@ -59,55 +58,66 @@ class FileSystemProvider:
         """
         index = 0
         MAX_DIGIT_SIZE = 8  # 12mb
-        while index < len(pack_file):
-            sha1 = pack_file[index:index + 40].decode()  # Extract SHA1 hash
-            index += 41
-            data_length = int(pack_file[index:index + MAX_DIGIT_SIZE].decode())
-            index += MAX_DIGIT_SIZE
-            data_content = pack_file[index:index + data_length]  # Extract data
-            index += data_length + 1  # Move index to the next line
-            self.create_object(repo_id, sha1, data_content)
 
-    def create_object(self, repo_id: str, sha: str, compressed_data: bytes):
+        self.lock.acquire()
+        try:
+            while index < len(pack_file):
+                sha1 = pack_file[index:index + 40].decode()  # Extract SHA1 hash
+                index += 41
+                data_length = int(pack_file[index:index + MAX_DIGIT_SIZE].decode())
+                index += MAX_DIGIT_SIZE
+                data_content = pack_file[index:index + data_length]  # Extract data
+                index += data_length + 1  # Move index to the next line
+                self.create_object(sha1, data_content)
+        finally:
+            self.lock.release()
+
+    def create_object(self, sha: str, compressed_data: bytes):
         """Creates an object in the objects database"""
-        pth = resolve_object_location(self.main_folder, repo_id, sha)
+        pth = resolve_object_location(self.main_folder, self.repo_id, sha)
         if not os.path.exists(pth):
-            folder_path = os.path.join(self.main_folder, repo_id, "objects", sha[:2])
+            folder_path = os.path.join(self.main_folder, self.repo_id, "objects", sha[:2])
             if not os.path.exists(folder_path):
                 os.mkdir(folder_path)
             write_file(pth, compressed_data, binary_=True)
 
-    def get_server_object(self, repo_id: str, s: str, c: str):
+    def get_server_object(self, s: str, c: str):
         """Fetch a web_server object from a remote repository"""
         assert len(s) == 2
         assert len(c) == 38
 
-        if not os.path.exists(os.path.join(self.main_folder, repo_id, "objects", s, c)):
+        if not os.path.exists(os.path.join(self.main_folder, self.repo_id, "objects", s, c)):
             return None
 
-        obj = resolve_object(self.main_folder, repo_id, f"{s}{c}")
+        obj = resolve_object(self.main_folder, self.repo_id, f"{s}{c}")
         return obj
 
-    def get_repo_branches(self, repo_id: str) -> list[str]:
+    def get_repo_branches(self) -> list[str]:
         """Gets the branches available in a repository"""
-        return os.listdir(os.path.join(self.main_folder, repo_id, "refs", "head"))
+        return os.listdir(os.path.join(self.main_folder, self.repo_id, "refs", "head"))
 
-    def get_head_commit(self, repo_id: str, branch: str):
+    def get_head_commit(self, branch: str):
         """Gets the current head commit"""
-        head_commit_path = os.path.join(self.main_folder, repo_id, "refs/head", branch)
+        head_commit_path = os.path.join(self.main_folder, self.repo_id, "refs/head", branch)
         if not os.path.exists(head_commit_path):
             return None
-        cmt = read_file(head_commit_path, binary_=False)
-        return cmt
 
-    def update_head_commit(self, repo_id: str, branch: str, new_head: str):
+        with self.lock:
+            if not os.path.exists(head_commit_path):
+                return None
+            cmt = read_file(head_commit_path, binary_=False)
+            return cmt
+
+    def update_head_commit(self, branch: str, new_head: str):
         """Updates the current head commit"""
-        head_path = os.path.join(self.main_folder, repo_id, "refs", "head", branch)
-        write_file(head_path, new_head, binary_=False)
+        head_path = os.path.join(self.main_folder, self.repo_id, "refs", "head", branch)
 
-    def extract_commit_data(self, repo_id: str, sha1) -> tuple:
+        with self.lock:
+            write_file(head_path, new_head, binary_=False)
+
+    def extract_commit_data(self, sha1) -> tuple:
         """Extracts the commit data, given its hash value"""
-        cmt = resolve_object(self.main_folder, repo_id, sha1).decode()
+        cmt = resolve_object(self.main_folder, self.repo_id, sha1).decode()
         lines = cmt.split("\n")
         del lines[2]
 
@@ -121,16 +131,16 @@ class FileSystemProvider:
 
         return message, tree_hash, parent_hash
 
-    def get_current_commit_files(self, repo_id: str, branch_name="main") -> (str, list[()]):
+    def get_current_commit_files(self, branch_name="main") -> (str, list[()]):
         """Returns a list of the current commit file names"""
-        last_commit = read_file(os.path.join(self.main_folder, repo_id, "refs/head", branch_name), binary_=False)
+        last_commit = read_file(os.path.join(self.main_folder, self.repo_id, "refs/head", branch_name), binary_=False)
         if last_commit == "":
             return []
 
-        message, tree_hash, parent = self.extract_commit_data(repo_id, last_commit)
+        message, tree_hash, parent = self.extract_commit_data(last_commit)
 
         # Traverse tree hash
-        tree_view = self.get_server_object(repo_id, tree_hash[:2], tree_hash[2:]).decode().split("\n")
+        tree_view = self.get_server_object(tree_hash[:2], tree_hash[2:]).decode().split("\n")
         tree_view.pop()  # Remove blank line
 
         files_commit = []
