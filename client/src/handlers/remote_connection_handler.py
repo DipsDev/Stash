@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 import zlib
@@ -67,7 +68,8 @@ class RemoteConnectionHandler:
         if len(obj) > 8000:  # Check if data is bigger than max buffer size
             index = 0
             while index < len(obj):
-                self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-send-stream", obj[index:index+1010])))
+                self.socket.send(
+                    self.handler.encrypt_packet(create_pkt_line("stash-send-stream", obj[index:index + 1010])))
                 index += 1010
             self.socket.send(self.handler.encrypt_packet(create_pkt_line(code, "end")))
             return
@@ -81,6 +83,15 @@ class RemoteConnectionHandler:
             print(data)
             exit(1)
         return data
+
+    def download_remote_object(self, sha: str):
+        """Download remote data"""
+        data = self.resolve_remote_object(sha, bypass_decompress=True)
+        fd_path = os.path.join(self.full_repo, "objects", sha[:2])
+        if not os.path.exists(fd_path):
+            os.mkdir(fd_path)
+
+        objects.write_file(os.path.join(fd_path, sha[2:]), data, binary_=True)
 
     def connect(self, repo_fingerprint: str | None):
         """Connect to remote web_server"""

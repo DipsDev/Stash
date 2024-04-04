@@ -48,7 +48,7 @@ class Stash:
         # Register handlers
         self.remote_handler = RemoteConnectionHandler(full_repo=self.repo_path)
         self.commit_handler = CommitHandler(self.folder_path, self.repo_path, self.remote_handler)
-        self.branch_handler = BranchHandler(self.folder_path, self.commit_handler)
+        self.branch_handler = BranchHandler(self.folder_path, self.commit_handler, self.remote_handler)
 
         self.current_branch_ref = "refs/head/main"
         self.branch_name = "main"
@@ -324,11 +324,7 @@ class Stash:
 
         for line in diffs_list:
             sha, tp = line.split(" ")
-            data = self.remote_handler.resolve_remote_object(sha, bypass_decompress=True)
-            pth = os.path.join(self.repo_path, "objects", sha[:2])
-            if not os.path.exists(pth):
-                os.mkdir(pth)
-            write_file(os.path.join(pth, sha[2:]), data, binary_=True)
+            self.remote_handler.download_remote_object(sha)
 
         remote_branch_name = f"remote_pull_{datetime.datetime.now().strftime('%y%m%d%f')}"
         self.branch_handler.create_branch(remote_branch_name, remote_head_commit)

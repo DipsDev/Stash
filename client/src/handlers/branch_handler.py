@@ -6,6 +6,7 @@ import sys
 import objects
 from handlers.commit_handler import CommitHandler
 from handlers.logger_handler import Logger
+from handlers.remote_connection_handler import RemoteConnectionHandler
 from models.tree import Tree
 from objects import write_file
 
@@ -13,10 +14,11 @@ from objects import write_file
 class BranchHandler:
     """A class that responsible for merging, and branch handling"""
 
-    def __init__(self, repo: str, commit_handler: CommitHandler):
+    def __init__(self, repo: str, commit_handler: CommitHandler, remote_handler: RemoteConnectionHandler):
         self.folder_path = repo
         self.stash_path = os.path.join(repo, ".stash")
         self.commit_handler = commit_handler
+        self.remote_handler = remote_handler
 
     def delete_branch(self, branch_name: str):
         """Deletes a given branch"""
@@ -40,6 +42,7 @@ class BranchHandler:
         while pointer != "":
             if pointer == target:
                 return True
+
             pointer = self.commit_handler.extract_commit_data(pointer).get_parent_hash()
 
         return False
