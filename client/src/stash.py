@@ -1,6 +1,7 @@
 """
 Main class
 """
+import datetime
 import os
 import pickle
 import random
@@ -290,6 +291,50 @@ class Stash:
 
         if not self.print_mode:
             Logger.highlight(f"stash: added {files_added} file(s) to the local repository.")
+
+    @cli_parser.register_command(1)
+    def pull(self, repo_fingerprint: str):
+        """
+        Pull the latest tree and merge it to the current workplace
+        stash pull <repository_fingerprint>
+
+        Description:
+            Updates the current workplace to the remote branch.
+            If there are conflicts, it will not be merged but throw an error instead.
+
+        Flags:
+            None
+        """
+        if not self.initialized:
+            Logger.println("stash: repository isn't initialized, use 'stash init'.")
+            return
+
+        self.remote_handler.connect(repo_fingerprint)
+        local_latest_commit = self.commit_handler.get_head_commit("main")
+        local_commit_tree = self.commit_handler.extract_commit_data(local_latest_commit).get_tree_hash()
+
+        remote_head_commit = self.remote_handler.get_remote_head_commit("main")
+        remote_commit_tree = self.remote_handler.resolve_remote_commit_data(remote_head_commit).get_tree_hash()
+
+        diffs = self.commit_handler.compare_remote_with_local(local_commit_tree,
+                                                              remote_commit_tree) + f"{remote_head_commit} commit\n "
+
+        diffs_list = diffs.split("\n")
+        del diffs_list[-1]
+
+        for line in diffs_list:
+            sha, tp = line.split(" ")
+            data = self.remote_handler.resolve_remote_object(sha, bypass_decompress=True)
+            pth = os.path.join(self.repo_path, "objects", sha[:2])
+            if not os.path.exists(pth):
+                os.mkdir(pth)
+            write_file(os.path.join(pth, sha[2:]), data, binary_=True)
+
+        remote_branch_name = f"remote_pull_{datetime.datetime.now().strftime('%y%m%d%f')}"
+        self.branch_handler.create_branch(remote_branch_name, remote_head_commit)
+        self.merge(remote_branch_name)
+
+        self.remote_handler.close()
 
     @cli_parser.register_command(1)
     def clone(self, repo_fingerprint: str):

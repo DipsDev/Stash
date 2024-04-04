@@ -61,3 +61,6 @@ class CLIHandler:
 
         if cmd == "clone":
             self.__stash.clone(params[0])
+
+        if cmd == "pull":
+            self.__stash.pull(params[0])

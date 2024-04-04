@@ -62,6 +62,32 @@ class CommitHandler:
         return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash()) \
                + f"{commit1_sha} commit\n"
 
+    def compare_remote_with_local(self, local_hash: str, remote_hash: str):
+        """compares the remote data to the local repo, and returns the changes to download locally"""
+        if local_hash == remote_hash:
+            return ""
+
+        lines = f"{remote_hash} tree\n"
+        parsed_local_data = objects.resolve_object(self.full_repo, local_hash).decode()
+        parsed_remote_data = self.remote_handler.resolve_remote_object(remote_hash)
+
+        parsed_remote = Tree.parse_tree(parsed_remote_data)
+        parsed_local = Tree.parse_tree(parsed_local_data)
+
+        for key, obj in parsed_remote.items():
+            if key not in parsed_local:
+                lines += f"{obj.get_hash()} {obj.get_type()}\n"
+                continue
+
+            if obj.get_hash() != parsed_local.get(key).get_hash():
+                if obj.get_type() == "blob":
+                    lines += f"{obj.get_hash()} {obj.get_type()}\n"
+                elif obj.get_type() == "tree":
+                    lines += f"{obj.get_hash()} tree\n" + \
+                             self.compare_remote_with_local(parsed_local.get(key).get_hash(), obj.get_hash())
+                continue
+        return lines
+
     def _remote_find_tree_diffs(self, remote_hash: str, local_hash: str):
         """
         Creates a prepfile based on remote-local diffs.
@@ -103,8 +129,6 @@ class CommitHandler:
 
         return lines
 
-
-
     def _local_find_tree_diffs(self, h1: str, h2: str):
         """Returns the diff between trees"""
         if h1 == h2:  # Same object
@@ -134,11 +158,11 @@ class CommitHandler:
                 continue
 
         # for key, obj in parsed_h1.items():
-            # if key not in parsed_h2:
-                # if obj.get_type() == "blob":
-                    # lines += f"-{key}\n"
-                # if obj.get_type() == "tree":
-                    # lines += f"-{key}\n"
+        # if key not in parsed_h2:
+        # if obj.get_type() == "blob":
+        # lines += f"-{key}\n"
+        # if obj.get_type() == "tree":
+        # lines += f"-{key}\n"
 
         return lines
 

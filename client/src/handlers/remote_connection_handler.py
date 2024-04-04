@@ -9,11 +9,14 @@ from handlers.logger_handler import Logger
 from models.commit import Commit
 
 
-def parse_pkt(data: bytes) -> (str, str):
+def parse_pkt(data: bytes, bypass_decompress=False) -> (str, str):
     """Parses the pkt line format to command name, data"""
     is_compressed = bool(int(data[:1].decode()))
     header_length = int(data[1:5].decode())
     header = data[5:5 + header_length].decode()
+
+    if bypass_decompress:
+        return header, data[6 + header_length::]
 
     if not is_compressed:
         return header, data[6 + header_length::].decode()
@@ -112,12 +115,12 @@ class RemoteConnectionHandler:
             self.close()
         return data
 
-    def resolve_remote_object(self, sha1: str):
+    def resolve_remote_object(self, sha1: str, bypass_decompress=False):
         """Resolve a remote object"""
         self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-receive-object", sha1)))
 
         temp = self.handler.decrypt_incoming_packet()
-        command_name, data = parse_pkt(temp)
+        command_name, data = parse_pkt(temp, bypass_decompress=bypass_decompress)
         if command_name != "stash-send-object":
             Logger.println("stash: Unexpected error")
             self.close()
