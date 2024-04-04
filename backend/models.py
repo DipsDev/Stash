@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from flask_login import UserMixin
@@ -13,6 +14,7 @@ class Repository(db.Model):
     name: Mapped[str] = mapped_column(db.String(20), unique=True)
     description: Mapped[str] = mapped_column(db.String(100), nullable=True)
     user_id: Mapped[str] = mapped_column(db.String(75), ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class User(db.Model, UserMixin):

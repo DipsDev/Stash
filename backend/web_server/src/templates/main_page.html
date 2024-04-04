@@ -9,10 +9,32 @@
 {% endmacro %}
 
 {% block content %}
-<ul class="flex-row flex gap-3 text-[#6B9DCA] mt-10 p-3">
-    <li>Hello</li>
-</ul>
-<div class="w-full h-1 bg-white border-t border-1"></div>
+<div class="p-3 mt-10">
+    <h1 class="text-[#6B9DCA] text-xl font-bold">News</h1>
+    <ul class="flex-col flex gap-3 mt-2 p-3">
+        {% for new_repo in new_repos %}
+            <li>
+                <div>
+                    <h3 class="text-lg font-semibold">
+                        {{ new_repo.user.username | e }} created
+                        <a class="text-[#6B9DCA] underline"
+                           href="{{ url_for('repo.view_repo', username=new_repo.user.username, repo_name=new_repo.name) }}">
+                                {{ new_repo.name | e }}
+                        </a>
+                    </h3>
+                    <p class="w-1/2 text-sm">
+                        {% if new_repo.description %}
+                            {{ new_repo.description | e }}
+                        {% else %}
+                            No description.
+                        {% endif %}
+                    </p>
+                    <p>{{ new_repo.created_at.strftime("%X %x") }}</p>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}
 
 

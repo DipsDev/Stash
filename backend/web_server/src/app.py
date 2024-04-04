@@ -41,9 +41,10 @@ app.register_blueprint(repo, url_prefix="/")
 def landing_page():
     """Main page"""
     user_repos = []
+    new_repos = models.Repository.query.order_by(models.Repository.created_at.desc()).limit(10).all()
     if current_user.is_authenticated:
         user_repos = models.Repository.query.where(models.Repository.user_id == current_user.id).all()
-    return render_template("main_page.html", repos=user_repos)
+    return render_template("main_page.html", repos=user_repos, new_repos=new_repos)
 
 
 if __name__ == '__main__':

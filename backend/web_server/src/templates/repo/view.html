@@ -55,17 +55,17 @@
             <code>stash init <br/></code>
             <code>stash add README.md <br/></code>
             <code>stash commit "first commit" <br/></code>
-            <code>stash push {{ repo.user.username }}@{{ repo.name | e }}</code>
+            <code>stash push {{ repo.user.username | e }}@{{ repo.name | e }}</code>
         </div>
     </div>
     <div class="mt-7 w-full">
         <h4 class="text-2xl mb-2">Push an existing repository from the command line</h4>
         <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
-            <code>stash push {{ repo.user.username }}@{{ repo.name | e }}</code>
+            <code>stash push {{ repo.user.username | e }}@{{ repo.name | e }}</code>
         </div>
     </div>
     {% else %}
-    <p class="mt-2 w-2/4">{{ repo.description }}</p>
+    <p class="mt-2 w-2/4">{{ repo.description | e }}</p>
     <div class="w-full mt-5">
         <div class="flex flex-row items-center justify-start gap-3 h-[40px] text-sm">
             <span class="bg-[#F4F4F4] px-2 py-1 rounded border text-[#ACACAC]">
@@ -83,9 +83,9 @@
         </div>
          <table class="w-full text-sm text-gray-700 dark:text-gray-400 mt-2">
               <tr class="bg-[#F4F4F4] text-gray-600">
-                <th class="px-4 py-2 text-left text-[#7F7F7F] font-normal">{{ commit_message[:20] }}</th>
+                <th class="px-4 py-2 text-left text-[#7F7F7F] font-normal">{{ commit_message[:20] | e }}</th>
                 <th class="px-4 py-2"></th>
-                <th class="px-4 py-2 text-right"><span class="font-normal text-[#ACACAC] mr-2">latest commit</span>{{ last_commit[:10] }}</th>
+                <th class="px-4 py-2 text-right"><span class="font-normal text-[#ACACAC] mr-2">latest commit</span>{{ last_commit[:10] | e }}</th>
               </tr>
                  {% for file in files %}
                  {{ file_view(file[0], file[2]) }}
