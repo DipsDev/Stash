@@ -58,3 +58,6 @@ class CLIHandler:
 
         if cmd == "merge":
             self.__stash.merge(params[0])
+
+        if cmd == "clone":
+            self.__stash.clone(params[0])

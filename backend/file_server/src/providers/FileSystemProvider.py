@@ -1,6 +1,9 @@
 import os
+import zlib
 
 from filelock import FileLock
+
+from models.tree import Tree
 
 
 def write_file(path, data, binary_=True):
@@ -15,7 +18,7 @@ def write_file(path, data, binary_=True):
         f.write(data)
 
 
-def read_file(path, binary_=True) -> bytes or str:
+def read_file(path, binary_=True) -> bytes | str:
     """Reads a binary file"""
     with open(path, "rb" if binary_ else "r") as f:
         return f.read()
@@ -48,6 +51,40 @@ class FileSystemProvider:
         self.main_folder = storage_path
         self.repo_id = repo_id
         self.lock = FileLock(os.path.join(self.main_folder, repo_id, "lock"), timeout=5)
+
+    def generate_prep_file(self, tree_hash: str):
+        """
+        Returns a preparefile for the given commit.
+        prepfile contains all directories, subdirectories and files that the commit contains.
+        """
+        tree_data_encoded = resolve_object(self.main_folder, self.repo_id, tree_hash)
+        tree = Tree.parse_tree(tree_data_encoded.decode())
+        file = f"{tree_hash} tree\n"
+        for key, obj in tree.items():
+            if obj.get_type() == "tree":
+                file += self.generate_prep_file(obj.get_hash())
+            else:
+                file += f"{obj.get_hash()} {obj.get_type()}\n"
+        return file
+
+    def generate_pack_file(self, prep_file: str):
+        """Generates a packfile from a prep file
+        prep files usually look like:
+
+        sha1 type
+        """
+        pack_file = b""
+        prep_file = prep_file.split("\n")
+        del prep_file[-1]
+
+        MAX_DIGIT_SIZE = 8  # 12mb
+        for row in prep_file:
+            sha, obj_type = row.split(" ")
+            loc = resolve_object_location(self.main_folder, self.repo_id, sha)
+            data = bytes(read_file(loc, binary_=True))
+            pack_file += f"{sha} {str(len(data)).zfill(MAX_DIGIT_SIZE)}".encode() + data + "\n".encode()
+
+        return zlib.compress(pack_file)
 
     def execute_packfile(self, pack_file: bytes) -> (str, bytes):
         """
@@ -133,7 +170,7 @@ class FileSystemProvider:
 
     def get_current_commit_files(self, branch_name="main") -> (str, list[()]):
         """Returns a list of the current commit file names"""
-        last_commit = read_file(os.path.join(self.main_folder, self.repo_id, "refs/head", branch_name), binary_=False)
+        last_commit = self.get_head_commit(branch_name)
         if last_commit == "":
             return []
 

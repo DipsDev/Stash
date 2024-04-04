@@ -12,6 +12,7 @@ class ResponseCode(Enum):
     OK = "stash-ok"
     UPDATE_HEAD = "stash-update-head"
     SEND_STREAM = "stash-send-stream"
+    RECEIVE_PACKFILE = "stash-receive-packfile"
 
 
 def parse_pkt(data: bytes) -> (str, bytes):

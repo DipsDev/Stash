@@ -103,6 +103,8 @@ class CommitHandler:
 
         return lines
 
+
+
     def _local_find_tree_diffs(self, h1: str, h2: str):
         """Returns the diff between trees"""
         if h1 == h2:  # Same object

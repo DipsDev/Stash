@@ -15,6 +15,8 @@ from globals import parse_pkt, create_pkt_line, ResponseCode
 ###
 
 
+
+
 class ClientThread:
     def __init__(self, conn, db_session):
         self.conn = conn
@@ -23,7 +25,7 @@ class ClientThread:
         self.enc = EncryptionProvider(self.conn)
         self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc)
         self.repo_id = None
-        self.file_system = None
+        self.file_system: FileSystemProvider
         self.buffer = []
 
     def __handle_client(self):

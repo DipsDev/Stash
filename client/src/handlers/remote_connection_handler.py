@@ -59,7 +59,7 @@ class RemoteConnectionHandler:
 
         return zlib.compress(pack_file)
 
-    def push_pkt(self, code: str, obj: bytes):
+    def push_pkt(self, code: str, obj: bytes | str):
         """Sends a pkt file to the server"""
         if len(obj) > 8000:  # Check if data is bigger than max buffer size
             index = 0

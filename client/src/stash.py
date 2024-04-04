@@ -3,6 +3,7 @@ Main class
 """
 import os
 import pickle
+import random
 import sys
 
 import objects
@@ -11,6 +12,7 @@ from handlers.branch_handler import BranchHandler
 from handlers.commit_handler import CommitHandler
 from handlers.logger_handler import Logger, ColorCode
 from handlers.remote_connection_handler import RemoteConnectionHandler
+from models.tree import Tree
 from objects import read_file, write_file
 
 
@@ -309,7 +311,62 @@ class Stash:
 
         """
 
-        # Fetch main branch from 
+        # Fetch main branch from
+        # Send the stash-receive-packfile
+        self.remote_handler.connect(repo_fingerprint)
+
+        full_name = repo_fingerprint.split('@')[-1].removesuffix('.stash')
+        Logger.println(f'cloning to {full_name}-main...')
+
+        head_commit = self.remote_handler.get_remote_head_commit("main")
+        if head_commit == "":
+            Logger.error("stash: No remote changes. cannot clone empty repository.")
+
+        while os.path.exists(os.path.join(os.getcwd(), f"{full_name}-main")):
+            Logger.println("stash: Folder already exists, using random name.")
+            full_name += "_" + random.choice(["cool", "grumpy", "funny", "smiley"])
+
+        main_folder = os.path.join(os.getcwd(), f"{full_name}-main")
+
+        os.mkdir(main_folder)
+        os.mkdir(os.path.join(main_folder, ".stash"))
+
+        for name in ["objects", "index", "refs", "refs/head"]:
+            os.mkdir(os.path.join(main_folder, ".stash", name))
+
+        # create the required files
+        # indices file, where file indexes are stored
+        write_file(os.path.join(main_folder, ".stash", "index", "d"), pickle.dumps({}))
+
+        # Write the current branch to the HEAD file. default: main branch
+        write_file(os.path.join(main_folder, ".stash", "HEAD"), "ref: refs/head/main", binary_=False)
+
+        # head file, where current commit hash is stored
+        write_file(os.path.join(main_folder, ".stash", "refs/head", "main"), head_commit, binary_=False)
+
+        remote_commit = self.remote_handler.resolve_remote_commit_data(head_commit)
+
+        def apply_local_changes(sha1_tree: str):
+            remote_obj = self.remote_handler.resolve_remote_object(sha1_tree)
+            parsed_tree = Tree.parse_tree(remote_obj)
+            for key, obj in parsed_tree.items():
+                pth = os.path.join(main_folder, obj.get_path())
+                if obj.get_type() == "tree":
+                    os.mkdir(pth)
+                    apply_local_changes(obj.get_hash())
+                if obj.get_type() == "blob":
+                    blob_data = self.remote_handler.resolve_remote_object(obj.get_hash())
+                    # Write blob data
+                    os.mkdir(os.path.join(main_folder, ".stash", "objects", obj.get_hash()[:2]))
+                    write_file(os.path.join(main_folder, ".stash", "objects", obj.get_hash()[:2], obj.get_hash()[2:]),
+                               blob_data.encode())
+
+                    # Create actual file
+                    write_file(pth, blob_data, binary_=False)
+
+        apply_local_changes(remote_commit.get_tree_hash())
+        Logger.println(f"stash: Fully cloned {repo_fingerprint} to {full_name}-main.")
+        self.remote_handler.close()
 
     @cli_parser.register_command(1)
     def checkout(self, branch_name: str, upsert=False):
@@ -352,4 +409,4 @@ class Stash:
         self.current_branch_ref = f"ref: refs/head/{branch_name}"  # Important for tests
         self.branch_name = branch_name
 
-        Logger.highlight(f"stash: switched branch, now in '{branch_name}'.")
+        Logger.highlight(f"stash: switched branch, now in '{branch_name}-main'.")
