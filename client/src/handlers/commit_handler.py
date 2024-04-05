@@ -59,8 +59,15 @@ class CommitHandler:
             Logger.println("stash: No changes were found.")
             exit(1)
 
-        return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash()) \
-               + f"{commit1_sha} commit\n"
+        def roll_back_commits(commit_hash: str):
+            """Returns a list of all commits that aren't available on the server"""
+            if commit_hash == remote_head_commit or commit_hash == "":
+                return []
+            cmt_data = self.extract_commit_data(commit_hash)
+            return [f"{commit_hash} commit\n"] + roll_back_commits(cmt_data.get_parent_hash())
+
+        return self._remote_find_tree_diffs(remote_data.get_tree_hash(), local_data.get_tree_hash())\
+               + "".join(roll_back_commits(commit1_sha))
 
     def compare_remote_with_local(self, local_hash: str, remote_hash: str):
         """compares the remote data to the local repo, and returns the changes to download locally"""

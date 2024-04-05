@@ -42,7 +42,8 @@ class BranchHandler:
         while pointer != "":
             if pointer == target:
                 return True
-
+            if not os.path.exists(os.path.join(self.stash_path, "object", pointer[:2], pointer[2:])):
+                self.remote_handler.download_remote_object(pointer)
             pointer = self.commit_handler.extract_commit_data(pointer).get_parent_hash()
 
         return False

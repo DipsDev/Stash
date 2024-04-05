@@ -324,6 +324,7 @@ class Stash:
 
         for line in diffs_list:
             sha, tp = line.split(" ")
+            print(sha, tp)
             self.remote_handler.download_remote_object(sha)
 
         remote_branch_name = f"remote_pull_{datetime.datetime.now().strftime('%y%m%d%f')}"
