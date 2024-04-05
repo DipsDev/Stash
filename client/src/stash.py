@@ -301,6 +301,7 @@ class Stash:
         Description:
             Updates the current workplace to the remote branch.
             If there are conflicts, it will not be merged but throw an error instead.
+            NOTE: Pull won't add the new files to index. to do that, see 'stash help add'.
 
         Flags:
             None
@@ -324,7 +325,6 @@ class Stash:
 
         for line in diffs_list:
             sha, tp = line.split(" ")
-            print(sha, tp)
             self.remote_handler.download_remote_object(sha)
 
         remote_branch_name = f"remote_pull_{datetime.datetime.now().strftime('%y%m%d%f')}"
@@ -408,6 +408,13 @@ class Stash:
 
         apply_local_changes(remote_commit.get_tree_hash())
         Logger.println(f"stash: Fully cloned {repo_fingerprint} to {full_name}-main.")
+
+        self.folder_path = main_folder
+        self.repo_path = os.path.join(self.folder_path, ".stash")
+        self.initialized = True
+
+        self.add(".")
+
         self.remote_handler.close()
 
     @cli_parser.register_command(1)
