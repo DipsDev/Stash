@@ -15,8 +15,6 @@ from globals import parse_pkt, create_pkt_line, ResponseCode
 ###
 
 
-
-
 class ClientThread:
     def __init__(self, conn, db_session):
         self.conn = conn
@@ -27,6 +25,7 @@ class ClientThread:
         self.repo_id = None
         self.file_system: FileSystemProvider
         self.buffer = []
+        self.is_repository_owned = False
 
     def __handle_client(self):
         """Handle client command communications"""
@@ -45,6 +44,11 @@ class ClientThread:
             return
 
         if command_name == ResponseCode.UPDATE_HEAD.value:
+
+            if not self.is_repository_owned:
+                # Create a pull request here
+                pass
+
             self.file_system.update_head_commit("main", data.decode())
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
                                                                    f"stash: Remote branch updated."
@@ -78,7 +82,7 @@ class ClientThread:
         self.enc.exchange_keys()
 
         # Authenticate user
-        self.repo_id = self.auth.authenticate_user()
+        self.repo_id, self.is_repository_owned = self.auth.authenticate_user()
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__", self.repo_id)
 
         while True:

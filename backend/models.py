@@ -17,6 +17,15 @@ class Repository(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 
+class PullRequest(db.model):
+    """Class that represents a pull request"""
+    id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
+    repo_id: Mapped[str] = mapped_column(db.String(75), ForeignKey("repository.id"))
+    author_id: Mapped[str] = mapped_column(db.String(75), ForeignKey('user.id'))
+    description: Mapped[str] = mapped_column(db.String(125), nullable=True)
+    head_hash: Mapped[str] = mapped_column(db.String(40), nullable=False, unique=True)
+
+
 class User(db.Model, UserMixin):
     """Class that represents the user model"""
 
