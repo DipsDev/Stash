@@ -17,7 +17,7 @@ class Repository(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 
-class PullRequest(db.model):
+class PullRequest(db.Model):
     """Class that represents a pull request"""
     id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
     repo_id: Mapped[str] = mapped_column(db.String(75), ForeignKey("repository.id"))
