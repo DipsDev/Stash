@@ -97,10 +97,6 @@ class Stash:
             Logger.println(f'stash: initialized empty repository at {self.folder_path}.')
             self.initialized = True  # Important for tests
 
-        # Create config sections
-        self.remote_handler.config["remotes"] = {}
-        self.remote_handler.commit_config_changes()
-
     @cli_parser.register_command(-1)
     def remote(self, params: list[str]):
         """
@@ -122,8 +118,17 @@ class Stash:
                 Logger.println("stash: No remotes were found. see 'stash help remote' for help.")
             for remote in all_remotes:
                 Logger.println(remote)
-            quit(1)
+            return
 
+        subcommand = params[0]
+        del params[0]
+        if subcommand == "add":
+            if len(params) != 2:
+                Logger.println("stash: Missing arguments. see 'stash help remote' for help.")
+                quit(1)
+            self.remote_handler.add_remote(params[0], params[1])
+            Logger.println(f"stash: Remote '{params[0]}' was added.")
+            return
     @cli_parser.register_command(1)
     def commit(self, message: str):
         """

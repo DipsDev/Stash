@@ -53,15 +53,15 @@ class RemoteConnectionHandler:
 
     def get_available_remotes(self) -> list[str]:
         """Returns a list of the available remotes"""
-        l = []
-        for key in self.config["remotes"]:
-            l.append(key)
-        return l
+        remotes = []
+        for key in self.config.sections():
+            remotes.append(key[8:len(key) - 1])
+        return remotes
 
     def add_remote(self, remote_name: str, url: str):
         """Adds a remote to the config"""
-        self.config["remotes"][remote_name] = {}
-        self.config["remotes"][remote_name]["url"] = url
+        self.config[f"remote \"{remote_name}\""] = {}
+        self.config[f"remote \"{remote_name}\""]["url"] = url
         self.commit_config_changes()
 
     def generate_pack_file(self, prep_file: str):
