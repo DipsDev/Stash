@@ -44,35 +44,61 @@ class RemoteConnectionHandler:
         self.socket = socket.socket()
         self.handler = EncryptionHandler(self.socket)
         self.config = configparser.ConfigParser()
-        self.config.read(os.path.join(self.full_repo, "config"))
+        self.config_created = False
 
-    def commit_config_changes(self):
+    def reload_local_remotes(self, path: str = None):
+        """Reads the config file again, and reloads the content to the memory."""
+        self.config.read(os.path.join(path, "config") if path is not None else os.path.join(self.full_repo, "config"))
+        self.config_created = True
+
+    def commit_config_changes(self, path: str = None):
         """Applies the changes to the config"""
-        with open(os.path.join(self.full_repo, "config"), "w") as f:
+        if not self.config_created:
+            self.reload_local_remotes()
+        with open(os.path.join(path if path is not None else self.full_repo, "config"), "w") as f:
             self.config.write(f)
 
     def get_available_remotes(self) -> list[str]:
         """Returns a list of the available remotes"""
+        if not self.config_created:
+            self.reload_local_remotes()
         remotes = []
         for key in self.config.sections():
             remotes.append(key[8:len(key) - 1])
         return remotes
 
-    def add_remote(self, remote_name: str, url: str):
+    def add_remote(self, remote_name: str, url: str, path: str = None):
         """Adds a remote to the config"""
+        if not self.config_created:
+            self.reload_local_remotes()
         try:
             self.config.add_section(f'remote "{remote_name}"')
         except configparser.DuplicateSectionError:
             Logger.error(f"stash: Remote '{remote_name}' is already exists.")
             quit(1)
         self.config[f"remote \"{remote_name}\""]["url"] = url
-        self.commit_config_changes()
+        self.commit_config_changes(path)
 
     def is_remote_exists(self, remote_name: str) -> bool:
         """Returns True or False whether the given remote_name exists"""
+        if not self.config_created:
+            self.reload_local_remotes()
         return self.config.has_section(f'remote "{remote_name}"')
 
+    def get_option(self, remote_name: str, option: str):
+        """Returns the option of a section"""
+        if not self.config_created:
+            self.reload_local_remotes()
+
+        if not self.is_remote_exists(remote_name):
+            Logger.error("stash: Remote does not exists. see 'stash help remote' for help.")
+            quit(1)
+        return self.config[f'remote "{remote_name}"'][option]
+
     def get_remote(self, remote_name: str):
+        if not self.config_created:
+            self.reload_local_remotes()
+
         if not self.is_remote_exists(remote_name):
             Logger.error("stash: Remote does not exists. see 'stash help remote' for help.")
             quit(1)

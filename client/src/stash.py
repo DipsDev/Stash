@@ -130,6 +130,8 @@ class Stash:
             Logger.println(f"stash: Remote '{params[0]}' was added.")
             return
 
+        Logger.println("stash: Unknown subcommand. see 'stash help remote' for help.")
+
     @cli_parser.register_command(1)
     def commit(self, message: str):
         """
@@ -186,7 +188,7 @@ class Stash:
         # send the diff files
 
         if remote_name is not None and self.remote_handler.is_remote_exists(remote_name):
-            repo_url = self.remote_handler.get_remote(remote_name).url
+            repo_url = self.remote_handler.get_option(remote_name, "url")
             self.remote_handler.connect(repo_url)
         else:
             Logger.println("stash: Remote was not provided, or cannot be found.")
@@ -336,11 +338,11 @@ class Stash:
         if not self.print_mode:
             Logger.highlight(f"stash: added {files_added} file(s) to the local repository.")
 
-    @cli_parser.register_command(1)
-    def pull(self, repo_fingerprint: str):
+    @cli_parser.register_command(0)
+    def pull(self):
         """
         Pull the latest tree and merge it to the current workplace
-        stash pull <repository_fingerprint>
+        stash pull
 
         Description:
             Updates the current workplace to the remote branch.
@@ -354,6 +356,11 @@ class Stash:
             Logger.println("stash: repository isn't initialized, use 'stash init'.")
             return
 
+        remotes = self.remote_handler.get_available_remotes()
+        if len(remotes) == 0:
+            Logger.println("stash: Couldn't find remote to pull from. are you sure you set up the remotes?")
+            quit(1)
+        repo_fingerprint = self.remote_handler.get_remote(remotes[0])
         self.remote_handler.connect(repo_fingerprint)
         local_latest_commit = self.commit_handler.get_head_commit("main")
         local_commit_tree = self.commit_handler.extract_commit_data(local_latest_commit).get_tree_hash()
@@ -426,6 +433,10 @@ class Stash:
 
         # Write the current branch to the HEAD file. default: main branch
         write_file(os.path.join(main_folder, ".stash", "HEAD"), "ref: refs/head/main", binary_=False)
+
+        write_file(os.path.join(main_folder, ".stash", "config"), "", binary_=False)
+        self.remote_handler.reload_local_remotes(os.path.join(main_folder, ".stash"))
+        self.remote_handler.add_remote("origin", repo_fingerprint, os.path.join(main_folder, ".stash"))
 
         # head file, where current commit hash is stored
         write_file(os.path.join(main_folder, ".stash", "refs/head", "main"), head_commit, binary_=False)
