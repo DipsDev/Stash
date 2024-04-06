@@ -21,7 +21,7 @@ class PullRequest(db.Model):
     """Class that represents a pull request"""
     id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
     repo_id: Mapped[str] = mapped_column(db.String(75), ForeignKey("repository.id"))
-    author_id: Mapped[str] = mapped_column(db.String(75), ForeignKey('user.id'))
+    user_id: Mapped[str] = mapped_column(db.String(75), ForeignKey('user.id'))
     description: Mapped[str] = mapped_column(db.String(125), nullable=True)
     head_hash: Mapped[str] = mapped_column(db.String(40), nullable=False, unique=True)
 

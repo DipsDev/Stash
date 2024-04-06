@@ -51,7 +51,7 @@ class ClientThread:
             head_cmt = data.decode()
             if not self.user.is_owner:
                 # Create a pull request here
-                pr_id = hashlib.md5(f"{self.repo_id[:10]}{head_cmt[:65]}")
+                pr_id = hashlib.sha1(f"{self.repo_id[:10]}{head_cmt[:65]}".encode()).hexdigest()
                 created_pull_request = PullRequest(id=pr_id,
                                                    repo_id=self.repo_id,
                                                    head_hash=head_cmt,
