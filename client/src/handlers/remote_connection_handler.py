@@ -60,9 +60,23 @@ class RemoteConnectionHandler:
 
     def add_remote(self, remote_name: str, url: str):
         """Adds a remote to the config"""
-        self.config[f"remote \"{remote_name}\""] = {}
+        try:
+            self.config.add_section(f'remote "{remote_name}"')
+        except configparser.DuplicateSectionError:
+            Logger.error(f"stash: Remote '{remote_name}' is already exists.")
+            quit(1)
         self.config[f"remote \"{remote_name}\""]["url"] = url
         self.commit_config_changes()
+
+    def is_remote_exists(self, remote_name: str) -> bool:
+        """Returns True or False whether the given remote_name exists"""
+        return self.config.has_section(f'remote "{remote_name}"')
+
+    def get_remote(self, remote_name: str):
+        if not self.is_remote_exists(remote_name):
+            Logger.error("stash: Remote does not exists. see 'stash help remote' for help.")
+            quit(1)
+        return self.config[f'remote "{remote_name}"']
 
     def generate_pack_file(self, prep_file: str):
         """Generates a packfile from a prep file

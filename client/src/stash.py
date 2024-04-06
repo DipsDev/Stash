@@ -129,6 +129,7 @@ class Stash:
             self.remote_handler.add_remote(params[0], params[1])
             Logger.println(f"stash: Remote '{params[0]}' was added.")
             return
+
     @cli_parser.register_command(1)
     def commit(self, message: str):
         """
