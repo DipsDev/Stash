@@ -409,12 +409,6 @@ class Stash:
         apply_local_changes(remote_commit.get_tree_hash())
         Logger.println(f"stash: Fully cloned {repo_fingerprint} to {full_name}-main.")
 
-        self.folder_path = main_folder
-        self.repo_path = os.path.join(self.folder_path, ".stash")
-        self.initialized = True
-
-        self.add(".")
-
         self.remote_handler.close()
 
     @cli_parser.register_command(1)
