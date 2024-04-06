@@ -84,6 +84,9 @@ class Stash:
         # indices file, where file indexes are stored
         write_file(os.path.join(self.repo_path, "index", "d"), pickle.dumps({}))
 
+        # Config file, where remotes are stored.
+        write_file(os.path.join(self.repo_path, "config"), "", binary_=False)
+
         # head file, where current commit hash is stored
         write_file(os.path.join(self.repo_path, "refs/head", "main"), "", binary_=False)
 
@@ -93,6 +96,33 @@ class Stash:
         if not self.print_mode:
             Logger.println(f'stash: initialized empty repository at {self.folder_path}.')
             self.initialized = True  # Important for tests
+
+        # Create config sections
+        self.remote_handler.config["remotes"] = {}
+        self.remote_handler.commit_config_changes()
+
+    @cli_parser.register_command(-1)
+    def remote(self, params: list[str]):
+        """
+        Manage set of tracked repositories
+        stash remote
+        stash remote add <name> <fingerprint>
+        stash remote remove <name>
+
+        Description:
+            Manage the set of repositories ("remotes") whose branches you track.
+            With no arguments, shows a list of existing remotes. Several subcommands are available to perform operations on the remotes.
+
+        Flags:
+            None
+        """
+        if len(params) == 0:
+            all_remotes = self.remote_handler.get_available_remotes()
+            if len(all_remotes) == 0:
+                Logger.println("stash: No remotes were found. see 'stash help remote' for help.")
+            for remote in all_remotes:
+                Logger.println(remote)
+            quit(1)
 
     @cli_parser.register_command(1)
     def commit(self, message: str):
@@ -183,7 +213,7 @@ class Stash:
         Logger.highlight(f"stash: Successfully merged branches. {wanted_branch} -> {self.branch_name}")
 
     @cli_parser.register_command(-1)
-    def branch(self, params: str, flags: dict):
+    def branch(self, params: list[str], flags: dict):
         """
         List, create, or delete branches
         stash branch [-d] [<branch_name>]

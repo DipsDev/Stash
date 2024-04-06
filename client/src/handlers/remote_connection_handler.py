@@ -1,8 +1,8 @@
 import os
 import socket
-import sys
 import zlib
 import getpass
+import configparser
 
 import objects
 from handlers.encryption_handler import EncryptionHandler
@@ -43,6 +43,26 @@ class RemoteConnectionHandler:
         self.full_repo = full_repo
         self.socket = socket.socket()
         self.handler = EncryptionHandler(self.socket)
+        self.config = configparser.ConfigParser()
+        self.config.read(os.path.join(self.full_repo, "config"))
+
+    def commit_config_changes(self):
+        """Applies the changes to the config"""
+        with open(os.path.join(self.full_repo, "config"), "w") as f:
+            self.config.write(f)
+
+    def get_available_remotes(self) -> list[str]:
+        """Returns a list of the available remotes"""
+        l = []
+        for key in self.config["remotes"]:
+            l.append(key)
+        return l
+
+    def add_remote(self, remote_name: str, url: str):
+        """Adds a remote to the config"""
+        self.config["remotes"][remote_name] = {}
+        self.config["remotes"][remote_name]["url"] = url
+        self.commit_config_changes()
 
     def generate_pack_file(self, prep_file: str):
         """Generates a packfile from a prep file
