@@ -159,16 +159,15 @@ class Stash:
         return cmt_hash
 
     @cli_parser.register_command(-1)
-    def push(self, given_repo_fingerprint=None):
+    def push(self, remote_name=None):
         """
         Update remote refs along with associated objects
-        stash push
+        stash push [remote]
 
         Description:
             Updates remote refs and sends associated objects.
-            You'll be prompted to enter repository fingerprint and correlated password.
+            If no remote was provided, You'll be prompted to enter the repository fingerprint.
             All changes will be shown in the stash webserver.
-
 
         Flags:
             None
@@ -178,12 +177,21 @@ class Stash:
             return
 
         current_commit = self.commit_handler.get_head_commit(self.branch_name)
-        assert current_commit != ""
+        if current_commit == "":
+            Logger.println("stash: No commit was found, there is nothing to push.")
+            quit(1)
 
         # fetch the current commit from the web_server
         # find_diff between the current local version and remote version
         # send the diff files
-        self.remote_handler.connect(given_repo_fingerprint)
+
+        if remote_name is not None and self.remote_handler.is_remote_exists(remote_name):
+            repo_url = self.remote_handler.get_remote(remote_name).url
+            self.remote_handler.connect(repo_url)
+        else:
+            Logger.println("stash: Remote was not provided, or cannot be found.")
+            self.remote_handler.connect(None)
+
         prep_file = self.commit_handler.find_diff(current_commit, "", True)
         pack_file = self.remote_handler.generate_pack_file(prep_file)
         self.remote_handler.push_pkt("stash-send-packfile", pack_file)
