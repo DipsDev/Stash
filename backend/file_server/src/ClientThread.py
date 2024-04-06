@@ -1,7 +1,9 @@
+import hashlib
 import zlib
 
 from pyDH import pyDH
 
+from backend.models import PullRequest
 from providers import AuthenticationProvider, EncryptionProvider, FileSystemProvider
 from globals import parse_pkt, create_pkt_line, ResponseCode
 
@@ -17,6 +19,9 @@ from globals import parse_pkt, create_pkt_line, ResponseCode
 
 class ClientThread:
     def __init__(self, conn, db_session):
+        self.user = None
+        self.file_system = None
+
         self.conn = conn
         self.db_session = db_session
         self.df = pyDH.DiffieHellman()
@@ -25,7 +30,6 @@ class ClientThread:
         self.repo_id = None
         self.file_system: FileSystemProvider
         self.buffer = []
-        self.is_repository_owned = False
 
     def __handle_client(self):
         """Handle client command communications"""
@@ -44,12 +48,19 @@ class ClientThread:
             return
 
         if command_name == ResponseCode.UPDATE_HEAD.value:
-
-            if not self.is_repository_owned:
+            head_cmt = data.decode()
+            if not self.user.is_owner:
                 # Create a pull request here
-                pass
+                pr_id = hashlib.md5(f"{self.repo_id[:10]}{head_cmt[:65]}")
+                created_pull_request = PullRequest(id=pr_id,
+                                                   repo_id=self.repo_id,
+                                                   head_hash=head_cmt,
+                                                   user_id=self.user.id)
+                self.conn.send(self.enc.encrypt_packet(
+                    create_pkt_line(ResponseCode.OK, "stash: Pull request created.")))
+                return
 
-            self.file_system.update_head_commit("main", data.decode())
+            self.file_system.update_head_commit("main", head_cmt)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
                                                                    f"stash: Remote branch updated."
                                                                    f" '{'main'}' is up to date")))
@@ -82,7 +93,7 @@ class ClientThread:
         self.enc.exchange_keys()
 
         # Authenticate user
-        self.repo_id, self.is_repository_owned = self.auth.authenticate_user()
+        self.repo_id, self.user = self.auth.authenticate_user()
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__", self.repo_id)
 
         while True:

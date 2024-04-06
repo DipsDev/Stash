@@ -1,3 +1,4 @@
+import dataclasses
 import sys
 
 import bcrypt
@@ -6,6 +7,12 @@ from sqlalchemy.orm import Session
 from backend.file_server.src.providers.EncryptionProvider import EncryptionProvider
 from globals import parse_pkt, create_pkt_line, ResponseCode
 from backend.models import User, Repository
+
+
+@dataclasses.dataclass
+class AuthenticatedUser:
+    id: str
+    is_owner: bool
 
 
 class AuthenticationProvider:
@@ -46,7 +53,8 @@ class AuthenticationProvider:
             self.conn.close()
             sys.exit(1)
 
-        repo = self.db_session.query(Repository).where(Repository.name == repo_name.removesuffix(".stash")).one_or_none()
+        repo = self.db_session.query(Repository).where(
+            Repository.name == repo_name.removesuffix(".stash")).one_or_none()
 
         if repo is None:
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: No related repository "
@@ -58,4 +66,4 @@ class AuthenticationProvider:
 
         own_this_repo = repo.user.id == db_user.id
 
-        return repo.id, own_this_repo
+        return repo.id, AuthenticatedUser(is_owner=own_this_repo, id=db_user.id)
