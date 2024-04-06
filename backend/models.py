@@ -25,6 +25,8 @@ class PullRequest(db.Model):
     description: Mapped[str] = mapped_column(db.String(125), nullable=True)
     head_hash: Mapped[str] = mapped_column(db.String(40), nullable=False, unique=True)
 
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
 
 class User(db.Model, UserMixin):
     """Class that represents the user model"""
@@ -34,3 +36,4 @@ class User(db.Model, UserMixin):
     password: Mapped[str] = mapped_column(db.String(20))
 
     repositories: Mapped[List[Repository]] = Relationship('Repository', backref="user")
+    pull_requests: Mapped[List[PullRequest]] = Relationship('PullRequest', backref="user")

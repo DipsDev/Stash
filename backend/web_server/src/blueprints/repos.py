@@ -65,10 +65,27 @@ def new():
     return render_template("repo/new.html", form=form)
 
 
+@repo.route("/<username>/<repo_name>/fork", methods=['POST'])
+@login_required
+def fork(username: str, repo_name: str):
+    """Route for forking an existing repository"""
+    current_repo = Repository.query.where(Repository.name == repo_name).first_or_404()
+    new_id = hashlib.sha1(f"{current_repo.id}_fork_{current_user.username[:10]}".encode()).hexdigest()
+
+    created_repo = Repository(id=new_id, name=f"fork_{repo_name}_{current_user.username}",
+                              description=f"Fork of {username}/{repo_name}", user_id=current_user.id)
+    db.session.add(created_repo)
+    db.session.commit()
+    file_system.allocate_repository(new_id)
+    return redirect(url_for(".view_repo", username=current_user.username,
+                            repo_name=f"fork_{repo_name}_{current_user.username}"))
+
+
+
 @repo.route("/<username>/<repo_name>/pulls")
 def pulls(username: str, repo_name: str):
     """Route for viewing the pull requests"""
-    current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
+    current_repo = Repository.query.where(Repository.name == repo_name).first_or_404()
     pull_requests = PullRequest.query.join(User).where(PullRequest.repo_id == current_repo.id).all()
     return render_template("repo/pulls.html", repo=current_repo, prs=pull_requests)
 
