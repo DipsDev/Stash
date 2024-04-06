@@ -56,6 +56,8 @@ class ClientThread:
                                                    repo_id=self.repo_id,
                                                    head_hash=head_cmt,
                                                    user_id=self.user.id)
+                self.db_session.add(created_pull_request)
+                self.db_session.commit()
                 self.conn.send(self.enc.encrypt_packet(
                     create_pkt_line(ResponseCode.OK, "stash: Pull request created.")))
                 return

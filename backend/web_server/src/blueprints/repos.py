@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 import re
 
 from services.database import db
-from backend.models import Repository, User
+from backend.models import Repository, User, PullRequest
 from services.file_system import file_system
 
 repo = Blueprint("repo", __name__)
@@ -63,6 +63,14 @@ def new():
         file_system.allocate_repository(created_repo_id)
         return redirect(url_for(".view_repo", username=current_user.username, repo_name=form.repository_name.data))
     return render_template("repo/new.html", form=form)
+
+
+@repo.route("/<username>/<repo_name>/pulls")
+def pulls(username: str, repo_name: str):
+    """Route for viewing the pull requests"""
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
+    pull_requests = PullRequest.query.join(User).where(PullRequest.repo_id == current_repo.id).all()
+    return render_template("repo/pulls.html", repo=current_repo, prs=pull_requests)
 
 
 @repo.route("/<username>/<repo_name>/")

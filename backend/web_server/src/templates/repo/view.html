@@ -1,5 +1,13 @@
 {% extends 'base.html' %}
 
+{% set repo_fingerprint = repo.user.username + "@" + repo.name + ".stash" %}
+
+{% if current_user.is_authenticated %}
+    {% set repo_fingerprint = current_user.username + "@" + repo.name + ".stash" %}
+{% endif %}
+
+
+
 {% macro tab_link(endpoint, name) %}
     {% if request.endpoint.endswith(endpoint) %}
         <li class="active"><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
@@ -33,7 +41,7 @@
 
 <script>
     function copy_stash_url() {
-      var copyText = "{{ repo.user.username | e }}@{{ repo.name | e }}.stash"
+      var copyText = "{{ repo_fingerprint | e }}"
       navigator.clipboard.writeText(copyText);
     }
 </script>
@@ -55,13 +63,14 @@
             <code>stash init <br/></code>
             <code>stash add README.md <br/></code>
             <code>stash commit "first commit" <br/></code>
-            <code>stash push {{ repo.user.username | e }}@{{ repo.name | e }}</code>
+            <code>stash remote add origin {{ repo_fingerprint | e }}<br /></code>
+            <code>stash push origin</code>
         </div>
     </div>
     <div class="mt-7 w-full">
         <h4 class="text-2xl mb-2">Push an existing repository from the command line</h4>
         <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
-            <code>stash push {{ repo.user.username | e }}@{{ repo.name | e }}</code>
+            <code>stash push {{ repo_fingerprint | e }}@{{ repo.name | e }}</code>
         </div>
     </div>
     {% else %}
@@ -76,7 +85,7 @@
                 </select>
             </span>
             <span class="pl-2 border border-gray-300 rounded my-1 text-gray-300 cursor-pointer text-sm" onclick="copy_stash_url()">
-                {{ repo.user.username | e }}@{{ repo.name | e }}.stash
+                {{ repo_fingerprint | e }}
                 <button class="ml-2 p-2 bg-[#F5F5F5] text-gray-600 font-semibold">copy</button>
             </span>
 
@@ -109,6 +118,9 @@
     <li class="text-gray-400 w-full">
             <a href="{{ url_for('repo.view_repo', username=repo.user.username, repo_name=repo.name) }}" class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
                 Files
+            </a>
+            <a href="{{ url_for('repo.pulls', username=repo.user.username, repo_name=repo.name) }}" class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
+                    Pull Requests
             </a>
     </li>
 </ol>

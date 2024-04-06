@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+
+<div class="w-full flex flex-col items-start justify-center p-7 mt-5 md:mt-0">
+    <p class="text-[#3E6FB1] text-xl">{{ repo.user.username | e }} /
+        <span class="font-semibold">{{ repo.name | e }}/</span>
+    </p>
+    <div class="w-full mt-5">
+        <ol>
+            {% for pr in prs %}
+            <li>
+                {{pr.user.username}}
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+
+
+</div>
+
+
+
+
+{% endblock %}
+
+
+{% block sidebar %}
+<ol class="flex flex-col items-start justify-center text-sm">
+    <li class="text-gray-400 w-full">
+            <a href="{{ url_for('repo.view_repo', username=repo.user.username, repo_name=repo.name) }}" class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
+                Files
+            </a>
+            <a href="{{ url_for('repo.pulls', username=repo.user.username, repo_name=repo.name) }}" class="block px-3 py-4 hover:bg-[#1E282C] w-full hover:text-white">
+                    Pull Requests
+            </a>
+    </li>
+</ol>
+{% endblock %}
