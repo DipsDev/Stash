@@ -54,7 +54,7 @@ class AuthenticationProvider:
             sys.exit(1)
 
         repo = self.db_session.query(Repository).where(
-            Repository.name == repo_name.removesuffix(".stash")).one_or_none()
+            Repository.name == repo_name.removesuffix(".stash"), Repository.user_id == db_user.id).one_or_none()
 
         if repo is None:
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: No related repository "

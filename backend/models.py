@@ -7,16 +7,6 @@ from sqlalchemy import ForeignKey
 from services.database import db
 
 
-class Repository(db.Model):
-    """Class that represents the repository model"""
-
-    id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
-    name: Mapped[str] = mapped_column(db.String(20), unique=True)
-    description: Mapped[str] = mapped_column(db.String(100), nullable=True)
-    user_id: Mapped[str] = mapped_column(db.String(75), ForeignKey('user.id'))
-    created_at = db.Column(db.DateTime, default=datetime.now)
-
-
 class PullRequest(db.Model):
     """Class that represents a pull request"""
     id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
@@ -26,6 +16,18 @@ class PullRequest(db.Model):
     head_hash: Mapped[str] = mapped_column(db.String(40), nullable=False, unique=True)
 
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class Repository(db.Model):
+    """Class that represents the repository model"""
+
+    id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
+    name: Mapped[str] = mapped_column(db.String(20))
+    description: Mapped[str] = mapped_column(db.String(100), nullable=True)
+    user_id: Mapped[str] = mapped_column(db.String(75), ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    pull_requests: Mapped[List[PullRequest]] = Relationship('PullRequest', backref="repository")
 
 
 class User(db.Model, UserMixin):

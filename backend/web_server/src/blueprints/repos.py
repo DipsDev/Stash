@@ -30,7 +30,8 @@ class CreateRepositoryForm(FlaskForm):
     source_id = StringField('source_id')
 
     def validate_repository_name(self, field):
-        exist_repo = db.session.execute(select(Repository).where(Repository.name == field.data)).one_or_none()
+        exist_repo = db.session.execute(select(Repository).where(Repository.name == field.data,
+                                                                 Repository.user_id == current_user.id)).one_or_none()
         if exist_repo:
             raise ValidationError("Repository name is already in use. Please choose another.")
         if not re.compile(r'^[A-Za-z0-9_.-]+$').match(field.data):
@@ -54,7 +55,7 @@ def new():
     """Route responsible for rendering the repo creation page"""
     form = CreateRepositoryForm()
     if form.validate_on_submit():
-        created_repo_id = hashlib.sha1(f"{form.repository_name.data}_repository".encode()).hexdigest()
+        created_repo_id = hashlib.sha1(f"{form.repository_name.data[:40]}_{current_user.username[:20]}_repository".encode()).hexdigest()
         created_repo = Repository(id=created_repo_id, name=form.repository_name.data,
                                   description=form.description.data, user_id=current_user.id)
 
@@ -81,11 +82,11 @@ def fork(username: str, repo_name: str):
                             repo_name=f"fork_{repo_name}_{current_user.username}"))
 
 
-
 @repo.route("/<username>/<repo_name>/pulls")
 def pulls(username: str, repo_name: str):
     """Route for viewing the pull requests"""
-    current_repo = Repository.query.where(Repository.name == repo_name).first_or_404()
+    repo_owner = User.query.where(User.username == username).first_or_404()
+    current_repo = Repository.query.where(Repository.name == repo_name, Repository.user_id == repo_owner.id).first_or_404()
     pull_requests = PullRequest.query.join(User).where(PullRequest.repo_id == current_repo.id).all()
     return render_template("repo/pulls.html", repo=current_repo, prs=pull_requests)
 
@@ -93,7 +94,8 @@ def pulls(username: str, repo_name: str):
 @repo.route("/<username>/<repo_name>/")
 def view_repo(username: str, repo_name: str):
     """Route responsible for viewing a user's repo"""
-    current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
+    repo_owner = User.query.where(User.username == username).first_or_404()
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name, Repository.user_id == repo_owner.id).first_or_404()
     data = file_system.get_current_commit_files(current_repo.id, "main")
     message, files = "", []
     if len(data) > 0:
@@ -106,7 +108,8 @@ def view_repo(username: str, repo_name: str):
 @repo.route("/<username>/<repo_name>/<path:path>")
 def view_repo_contents(username: str, repo_name: str, path: str):
     """Route responsible for viewing a user's repo contents"""
-    current_repo = Repository.query.join(User).where(Repository.name == repo_name).first_or_404()
+    repo_owner = User.query.where(User.username == username).first_or_404()
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name, Repository.user_id == repo_owner.id).first_or_404()
     d = file_system.get_nested_tree_contents(current_repo.id, path)
     if d is None:
         abort(404)
