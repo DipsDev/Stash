@@ -49,18 +49,6 @@ class ClientThread:
 
         if command_name == ResponseCode.UPDATE_HEAD.value:
             head_cmt = data.decode()
-            if not self.user.is_owner:
-                # Create a pull request here
-                pr_id = hashlib.sha1(f"{self.repo_id[:10]}{head_cmt[:65]}".encode()).hexdigest()
-                created_pull_request = PullRequest(id=pr_id,
-                                                   repo_id=self.repo_id,
-                                                   head_hash=head_cmt,
-                                                   user_id=self.user.id)
-                self.db_session.add(created_pull_request)
-                self.db_session.commit()
-                self.conn.send(self.enc.encrypt_packet(
-                    create_pkt_line(ResponseCode.OK, "stash: Pull request created.")))
-                return
 
             self.file_system.update_head_commit("main", head_cmt)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
@@ -96,6 +84,11 @@ class ClientThread:
 
         # Authenticate user
         self.repo_id, self.user = self.auth.authenticate_user()
+        if not self.user.is_owner:
+            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: You do not own this "
+                                                                                       "repository!")))
+            return
+
         self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__", self.repo_id)
 
         while True:
