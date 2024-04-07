@@ -2,6 +2,7 @@
 Module that handles creating, viewing and editing repositories
 """
 import hashlib
+import uuid
 
 from flask import Blueprint, render_template, redirect, url_for, abort
 from flask_wtf import FlaskForm
@@ -12,7 +13,7 @@ from flask_login import login_required, current_user
 import re
 
 from services.database import db
-from backend.models import Repository, User, PullRequest
+from backend.models import Repository, User, PullRequest, Fork
 from services.file_system import file_system
 
 repo = Blueprint("repo", __name__)
@@ -55,7 +56,8 @@ def new():
     """Route responsible for rendering the repo creation page"""
     form = CreateRepositoryForm()
     if form.validate_on_submit():
-        created_repo_id = hashlib.sha1(f"{form.repository_name.data[:40]}_{current_user.username[:20]}_repository".encode()).hexdigest()
+        created_repo_id = hashlib.sha1(
+            f"{form.repository_name.data[:40]}_{current_user.username[:20]}_repository".encode()).hexdigest()
         created_repo = Repository(id=created_repo_id, name=form.repository_name.data,
                                   description=form.description.data, user_id=current_user.id)
 
@@ -71,22 +73,32 @@ def new():
 def fork(username: str, repo_name: str):
     """Route for forking an existing repository"""
     current_repo = Repository.query.where(Repository.name == repo_name).first_or_404()
-    new_id = hashlib.sha1(f"{current_repo.id}_fork_{current_user.username[:10]}".encode()).hexdigest()
 
-    created_repo = Repository(id=new_id, name=f"fork_{repo_name}_{current_user.username}",
-                              description=f"Fork of {username}/{repo_name}", user_id=current_user.id)
+    if username == current_user.username:
+        return redirect(url_for('.view_repo', username=username, repo_name=repo_name))
+
+    new_id = hashlib.sha1(f"{current_repo.id[:25]}_fork_{current_user.username[:10]}".encode()).hexdigest()
+
+    created_repo = Repository(id=new_id, name=repo_name,
+                              description=current_repo.description, user_id=current_user.id)
     db.session.add(created_repo)
+
+    created_fork = Fork(id=uuid.uuid4().hex, original_repo_id=current_repo.id, forked_repo_id=new_id)
+    db.session.add(created_fork)
+
     db.session.commit()
     file_system.allocate_repository(new_id)
+    file_system.copy_latest_commit(current_repo.id, new_id)
     return redirect(url_for(".view_repo", username=current_user.username,
-                            repo_name=f"fork_{repo_name}_{current_user.username}"))
+                            repo_name=repo_name))
 
 
 @repo.route("/<username>/<repo_name>/pulls")
 def pulls(username: str, repo_name: str):
     """Route for viewing the pull requests"""
     repo_owner = User.query.where(User.username == username).first_or_404()
-    current_repo = Repository.query.where(Repository.name == repo_name, Repository.user_id == repo_owner.id).first_or_404()
+    current_repo = Repository.query.where(Repository.name == repo_name,
+                                          Repository.user_id == repo_owner.id).first_or_404()
     pull_requests = PullRequest.query.join(User).where(PullRequest.repo_id == current_repo.id).all()
     return render_template("repo/pulls.html", repo=current_repo, prs=pull_requests)
 
@@ -95,13 +107,19 @@ def pulls(username: str, repo_name: str):
 def view_repo(username: str, repo_name: str):
     """Route responsible for viewing a user's repo"""
     repo_owner = User.query.where(User.username == username).first_or_404()
-    current_repo = Repository.query.join(User).where(Repository.name == repo_name, Repository.user_id == repo_owner.id).first_or_404()
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name,
+                                                     Repository.user_id == repo_owner.id).first_or_404()
+    original_repo = Fork.query.join(Repository.original_repo_id).where(Fork.forked_repo_id == current_repo.id).first()
+    if original_repo is not None:
+        original_repo.user = User.query.where(User.id == original_repo.original_repo.user_id).first()
+
     data = file_system.get_current_commit_files(current_repo.id, "main")
+
     message, files = "", []
     if len(data) > 0:
         message, files = data
     head_commit = file_system.get_head_commit(current_repo.id, "main")
-    return render_template("repo/view.html", repo=current_repo, files=files,
+    return render_template("repo/view.html", repo=current_repo, files=files, original_repo=original_repo,
                            last_commit=head_commit, commit_message=message)
 
 
@@ -109,7 +127,8 @@ def view_repo(username: str, repo_name: str):
 def view_repo_contents(username: str, repo_name: str, path: str):
     """Route responsible for viewing a user's repo contents"""
     repo_owner = User.query.where(User.username == username).first_or_404()
-    current_repo = Repository.query.join(User).where(Repository.name == repo_name, Repository.user_id == repo_owner.id).first_or_404()
+    current_repo = Repository.query.join(User).where(Repository.name == repo_name,
+                                                     Repository.user_id == repo_owner.id).first_or_404()
     d = file_system.get_nested_tree_contents(current_repo.id, path)
     if d is None:
         abort(404)

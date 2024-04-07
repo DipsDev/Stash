@@ -78,6 +78,17 @@ class FileSystem:
             cmt = read_file(head_commit_path, binary_=False)
             return cmt
 
+    def set_head_commit(self, repo_id: str, branch: str, hash: str):
+        """Gets the current head commit"""
+        head_commit_path = os.path.join(self.main_folder, repo_id, "refs/head", branch)
+        if not os.path.exists(head_commit_path):
+            return None
+
+        repo_lock = self.craft_lock(repo_id)
+
+        with repo_lock:
+            write_file(head_commit_path, hash, binary_=False)
+
     def extract_commit_data(self, repo_id: str, sha1) -> tuple:
         """Extracts the commit data, given its hash value"""
         cmt = resolve_object(self.main_folder, repo_id, sha1).decode()
@@ -151,6 +162,51 @@ class FileSystem:
             tp, hsh, filename = row.split(" ")
             files_commit.append((tp, hsh, filename))
         return message, files_commit
+
+    def copy_latest_commit(self, from_id: str, to_id: str, branch_name="main"):
+        """Copies the latest commit to another repository"""
+        latest_cmt_hash = self.get_head_commit(from_id, branch_name)
+        tree_hash = self.extract_commit_data(from_id, latest_cmt_hash)[1]
+
+        object_location_to = os.path.join(self.main_folder, to_id, "objects")
+        object_location_from = os.path.join(self.main_folder, from_id, "objects")
+
+        # Add the commit data
+        commit_data = read_file(os.path.join(object_location_from, latest_cmt_hash[:2], latest_cmt_hash[2:]))
+        cmt_path = os.path.join(object_location_to, latest_cmt_hash[:2])
+        if not os.path.exists(cmt_path):
+            os.mkdir(cmt_path)
+        write_file(os.path.join(object_location_to, latest_cmt_hash[:2], latest_cmt_hash[2:]), commit_data)
+
+        # Add the first tree
+        tree_data = read_file(os.path.join(object_location_from, tree_hash[:2], tree_hash[2:]))
+        cmt_path = os.path.join(object_location_to, tree_hash[:2])
+        if not os.path.exists(cmt_path):
+            os.mkdir(cmt_path)
+        write_file(os.path.join(object_location_to, tree_hash[:2], tree_hash[2:]), tree_data)
+
+        def craft_objects(repo_id=from_id, current_hash=tree_hash):
+            if current_hash == "":
+                return
+
+            current_tree_data = resolve_object(self.main_folder, repo_id, current_hash).decode()
+            items = current_tree_data.split("\n")
+            del items[-1]
+            for i in items:
+                tp, hsh, pth = i.split(" ")
+                data = read_file(os.path.join(object_location_from, hsh[:2], hsh[2:]))
+                if not os.path.exists(os.path.join(object_location_to, hsh[:2])):
+                    os.mkdir(os.path.join(object_location_to, hsh[:2]))
+                write_file(os.path.join(object_location_to, hsh[:2], hsh[2:]), data=data, binary_=True)
+
+                if tp == "blob":
+                    continue
+                if tp == "tree":
+                    print('continued')
+                    craft_objects(repo_id, hsh)
+
+        craft_objects()
+        self.set_head_commit(to_id, branch=branch_name, hash=latest_cmt_hash)
 
     def allocate_repository(self, repo_id: str):
         """Allocates a new repository in the filesystem"""

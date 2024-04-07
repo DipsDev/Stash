@@ -18,6 +18,14 @@ class PullRequest(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 
+class Fork(db.Model):
+    """Class that represents the fork model"""
+
+    id: Mapped[str] = mapped_column(db.String(75), primary_key=True)
+    forked_repo_id: Mapped[str] = mapped_column(db.String(75), ForeignKey("repository.id"))
+    original_repo_id: Mapped[str] = mapped_column(db.String(75), ForeignKey("repository.id"))
+
+
 class Repository(db.Model):
     """Class that represents the repository model"""
 
@@ -28,6 +36,9 @@ class Repository(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     pull_requests: Mapped[List[PullRequest]] = Relationship('PullRequest', backref="repository")
+
+    forks: Mapped[List[Fork]] = Relationship('Fork', backref="forks", foreign_keys=[Fork.forked_repo_id])
+    original_repo_id: Mapped[Fork] = Relationship('Fork', backref="original_repo",  foreign_keys=[Fork.original_repo_id])
 
 
 class User(db.Model, UserMixin):

@@ -52,6 +52,11 @@
     <p class="text-[#3E6FB1] text-xl">{{ repo.user.username | e }} /
         <span class="font-semibold">{{ repo.name | e }}/{{ "/".join(request.path.split("/")[3:]) | e }}</span>
     </p>
+    {% if original_repo %}
+        <a href="{{ url_for('repo.view_repo', username=original_repo.user.username, repo_name=original_repo.original_repo.name) }}" class="text-sm mt-2 text-blue-600">
+            Fork of {{ original_repo.user.username }}/{{ original_repo.original_repo.name }}
+        </a>
+    {% endif %}
 
     {% if files | length == 0 %}
     <h2 class="text-3xl mt-5"><span class="font-semibold">Quick setup</span> - if you've done this kind of thing before</h2>
@@ -70,7 +75,8 @@
     <div class="mt-7 w-full">
         <h4 class="text-2xl mb-2">Push an existing repository from the command line</h4>
         <div class="bg-[#F5F5F5] py-3 px-2 rounded border-2 border-[#E0E0E0] w-full">
-            <code>stash push {{ repo_fingerprint | e }}</code>
+            <code>stash remote add origin {{ repo_fingerprint | e }}<br /></code>
+            <code>stash push origin</code>
         </div>
     </div>
     {% else %}
