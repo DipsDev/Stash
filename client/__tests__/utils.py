@@ -1,11 +1,13 @@
 import datetime
+import random
 import uuid
 
 
 def generate_random_filename(basename="testfile"):
     """generates a random filename"""
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
     suffix = datetime.datetime.now().strftime("%f_%H%M%S")
-    return "_".join([basename, suffix])
+    return "_".join([*random.choices(letters, k=5), basename, suffix])
 
 
 def write_pseudo_data(path: str):
