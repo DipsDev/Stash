@@ -125,7 +125,7 @@ def view_repo_contents(username: str, repo_name: str, branch: str, path: str):
     repo_owner = User.query.where(User.username == username).first_or_404()
     current_repo = Repository.query.join(User).where(Repository.name == repo_name,
                                                      Repository.user_id == repo_owner.id).first_or_404()
-    d = file_system.get_nested_tree_contents(current_repo.id, path)
+    d = file_system.get_nested_tree_contents(current_repo.id, path, branch_name=branch)
     if d is None:
         abort(404)
     tp, data = d
