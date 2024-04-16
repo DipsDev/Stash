@@ -24,7 +24,7 @@ class CreateRepositoryForm(FlaskForm):
     description = StringField('description', validators=[Optional(True)])
 
     initial_value = RadioField('initial_value',
-                               choices=[("empty", "empty repo"), ("clone", "clone a repo"),
+                               choices=[("empty", "empty repo"),
                                         ("readme", "create a repo with a default readme.md")],
                                validators=[DataRequired()])
 
@@ -37,17 +37,6 @@ class CreateRepositoryForm(FlaskForm):
             raise ValidationError("Repository name is already in use. Please choose another.")
         if not re.compile(r'^[A-Za-z0-9_.-]+$').match(field.data):
             raise ValidationError("Repository name cannot contain spaces and special characters (other then a '-').")
-
-    def validate_source_id(self, field):
-        if self.initial_value.data != "clone":
-            return
-
-        if not field.data:
-            raise ValidationError("You must provide a source id in order to create a clone.")
-
-        repo_sourced_id = db.session.execute(select(Repository).where(Repository.id == field.data)).one_or_none()
-        if repo_sourced_id is None:
-            raise ValidationError("You must provide a valid source id.")
 
 
 @repo.route("/new", methods=['POST', 'GET'])
