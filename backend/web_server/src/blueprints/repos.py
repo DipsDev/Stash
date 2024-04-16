@@ -101,7 +101,8 @@ def view_repo(username: str, repo_name: str):
     current_repo = Repository.query.join(User).where(Repository.name == repo_name,
                                                      Repository.user_id == repo_owner.id).first_or_404()
 
-    if branch not in file_system.get_repo_branches(current_repo.id):
+    repo_branches = file_system.get_repo_branches(current_repo.id)
+    if branch not in repo_branches:
         abort(404)
 
     original_repo = Fork.query.join(Repository.original_repo_id).where(Fork.forked_repo_id == current_repo.id).first()
@@ -116,6 +117,8 @@ def view_repo(username: str, repo_name: str):
     head_commit = file_system.get_head_commit(current_repo.id, branch)
     return render_template("repo/view.html", repo=current_repo, files=files, original_repo=original_repo,
                            current_branch=branch,
+                           repo_branches=repo_branches,
+
                            last_commit=head_commit, commit_message=message)
 
 

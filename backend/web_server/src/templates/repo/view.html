@@ -44,6 +44,11 @@
       var copyText = "{{ repo_fingerprint | e }}"
       navigator.clipboard.writeText(copyText);
     }
+
+    function handleSelect(elm)
+      {
+         window.location = "?b=" + elm.value;
+      }
 </script>
 
 
@@ -86,9 +91,13 @@
             <div class="flex flex-row items-center justify-start gap-3 h-[40px] text-sm">
             <span class="bg-[#F4F4F4] px-2 py-1 rounded border text-[#ACACAC]">
                 branch:
-                <select name="branches" class="pl-1 py-1 bg-transparent font-bold text-gray-600">
-                  <option value="main">main</option>
-                    <option value="dev">dev</option>
+                <select onchange="javascript:handleSelect(this)" name="branches" class="pl-1 py-1 bg-transparent font-bold text-gray-600">
+                    <option value="">{{ current_branch }}</option>
+                    {% for branch in repo_branches %}
+                        {% if branch !=  current_branch %}
+                            <option value="{{branch}}">{{ branch }}</option>
+                        {% endif %}
+                    {% endfor %}
                 </select>
             </span>
             <span class="pl-2 border border-gray-300 rounded my-1 text-gray-300 cursor-pointer text-sm" onclick="copy_stash_url()">
