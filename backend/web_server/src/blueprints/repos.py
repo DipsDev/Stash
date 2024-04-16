@@ -4,7 +4,7 @@ Module that handles creating, viewing and editing repositories
 import hashlib
 import uuid
 
-from flask import Blueprint, render_template, redirect, url_for, abort
+from flask import Blueprint, render_template, redirect, url_for, abort, request
 from flask_wtf import FlaskForm
 from sqlalchemy import select
 from wtforms import StringField, RadioField, ValidationError
@@ -95,25 +95,32 @@ def pulls(username: str, repo_name: str):
 @repo.route("/<username>/<repo_name>/")
 def view_repo(username: str, repo_name: str):
     """Route responsible for viewing a user's repo"""
+    branch = request.args.get("b", default="main")
+
     repo_owner = User.query.where(User.username == username).first_or_404()
     current_repo = Repository.query.join(User).where(Repository.name == repo_name,
                                                      Repository.user_id == repo_owner.id).first_or_404()
+
+    if branch not in file_system.get_repo_branches(current_repo.id):
+        abort(404)
+
     original_repo = Fork.query.join(Repository.original_repo_id).where(Fork.forked_repo_id == current_repo.id).first()
     if original_repo is not None:
         original_repo.user = User.query.where(User.id == original_repo.original_repo.user_id).first()
 
-    data = file_system.get_current_commit_files(current_repo.id, "main")
+    data = file_system.get_current_commit_files(current_repo.id, branch)
 
     message, files = "", []
     if len(data) > 0:
         message, files = data
-    head_commit = file_system.get_head_commit(current_repo.id, "main")
+    head_commit = file_system.get_head_commit(current_repo.id, branch)
     return render_template("repo/view.html", repo=current_repo, files=files, original_repo=original_repo,
+                           current_branch=branch,
                            last_commit=head_commit, commit_message=message)
 
 
-@repo.route("/<username>/<repo_name>/<path:path>")
-def view_repo_contents(username: str, repo_name: str, path: str):
+@repo.route("/<username>/<repo_name>/<branch>/<path:path>")
+def view_repo_contents(username: str, repo_name: str, branch: str, path: str):
     """Route responsible for viewing a user's repo contents"""
     repo_owner = User.query.where(User.username == username).first_or_404()
     current_repo = Repository.query.join(User).where(Repository.name == repo_name,
@@ -135,6 +142,6 @@ def view_repo_contents(username: str, repo_name: str, path: str):
         except UnicodeDecodeError:
             content = []
             valid_encoding = False
-        return render_template("repo/view_file.html", repo=current_repo, path=path,
+        return render_template("repo/view_file.html", repo=current_repo, path=path, current_branch=branch,
                                file_content=enumerate(content), commit_message="", last_commit="",
                                valid_encoding=valid_encoding)
