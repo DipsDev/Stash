@@ -10,6 +10,7 @@ from backend.file_server.src.ClientThread import ClientThread
 # Hexadecimal length is added before sending
 
 PORT = 8838
+REPOSITORY_SAVING_ABS_PTH = r"D:\code\stash\backend\__temp__"
 
 
 class Server:
@@ -23,7 +24,7 @@ class Server:
         with Session(self.engine) as session:
             while 1:
                 conn, addr = self.s.accept()
-                thrd = ClientThread(conn, session)
+                thrd = ClientThread(conn, session, REPOSITORY_SAVING_ABS_PTH)
                 threading.Thread(daemon=False, target=thrd.run).start()
 
 

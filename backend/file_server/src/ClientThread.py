@@ -18,15 +18,16 @@ from globals import parse_pkt, create_pkt_line, ResponseCode
 
 
 class ClientThread:
-    def __init__(self, conn, db_session):
+    def __init__(self, conn, db_session, repos_loc: str):
         self.user = None
         self.file_system = None
+        self.repos_abs_path = repos_loc
 
         self.conn = conn
         self.db_session = db_session
         self.df = pyDH.DiffieHellman()
         self.enc = EncryptionProvider(self.conn)
-        self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc)
+        self.auth = AuthenticationProvider(self.conn, self.db_session, self.enc, repos_loc)
         self.repo_id = None
         self.file_system: FileSystemProvider
         self.buffer = []
@@ -50,10 +51,10 @@ class ClientThread:
         if command_name == ResponseCode.UPDATE_HEAD.value:
             head_cmt = data.decode()
 
-            self.file_system.update_head_commit("main", head_cmt)
+            self.file_system.update_head_commit(self.user.branch, head_cmt)
             self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.OK,
                                                                    f"stash: Remote branch updated."
-                                                                   f" '{'main'}' is up to date")))
+                                                                   f" '{self.user.branch}' is up to date")))
             return
 
         if command_name == ResponseCode.SEND_STREAM.value:
@@ -84,12 +85,8 @@ class ClientThread:
 
         # Authenticate user
         self.repo_id, self.user = self.auth.authenticate_user()
-        if not self.user.is_owner:
-            self.conn.send(self.enc.encrypt_packet(create_pkt_line(ResponseCode.ERROR, "stash: You do not own this "
-                                                                                       "repository!")))
-            return
 
-        self.file_system = FileSystemProvider(r"D:\code\stash\backend\__temp__", self.repo_id)
+        self.file_system = FileSystemProvider(self.repos_abs_path, self.repo_id)
 
         while True:
             self.__handle_client()

@@ -160,8 +160,8 @@ class Stash:
         Logger.highlight("stash: changes were committed")
         return cmt_hash
 
-    @cli_parser.register_command(-1)
-    def push(self, remote_name=None):
+    @cli_parser.register_command(2)
+    def push(self, remote_name, branch):
         """
         Update remote refs along with associated objects
         stash push [remote]
@@ -189,15 +189,15 @@ class Stash:
 
         if remote_name is not None and self.remote_handler.is_remote_exists(remote_name):
             repo_url = self.remote_handler.get_option(remote_name, "url")
-            self.remote_handler.connect(repo_url)
+            self.remote_handler.connect(repo_url, branch)
         else:
-            Logger.println("stash: Remote was not provided, or cannot be found.")
-            self.remote_handler.connect(None)
+            Logger.error("stash: Remote was not provided, or cannot be found.")
+            quit(1)
 
-        prep_file = self.commit_handler.find_diff(current_commit, "", True)
+        prep_file = self.commit_handler.find_diff(current_commit, "", True, local_branch=self.branch_name, remote_branch=branch)
         pack_file = self.remote_handler.generate_pack_file(prep_file)
         self.remote_handler.push_pkt("stash-send-packfile", pack_file)
-        d = self.remote_handler.push_pkt("stash-update-head", self.commit_handler.get_head_commit("main"))
+        d = self.remote_handler.push_pkt("stash-update-head", self.commit_handler.get_head_commit(self.branch_name))
         print(d)
         self.remote_handler.close()
 

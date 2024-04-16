@@ -37,7 +37,7 @@ class CommitHandler:
                 file += f"{obj.get_hash()} {obj.get_type()}\n"
         return file
 
-    def find_diff(self, commit1_sha: str, commit2_sha: str, remote_=False):
+    def find_diff(self, commit1_sha: str, commit2_sha: str, remote_=False, remote_branch="main", local_branch="main"):
         """Finds the diff between two commits. given their hashes"""
         if not remote_:
             cmt1_data = self.extract_commit_data(commit1_sha)
@@ -46,10 +46,10 @@ class CommitHandler:
             return self._local_find_tree_diffs(cmt1_data.get_tree_hash(), cmt2_data.get_tree_hash())
 
         local_data = self.extract_commit_data(commit1_sha)
-        remote_head_commit = self.remote_handler.get_remote_head_commit("main")
+        remote_head_commit = self.remote_handler.get_remote_head_commit(remote_branch)
         if remote_head_commit == "":
             Logger.println("stash: Remote repository is empty. Fetching resources...")
-            current_commit = self.extract_commit_data(self.get_head_commit("main"))
+            current_commit = self.extract_commit_data(self.get_head_commit(local_branch))
             d = self.generate_prep_file(current_commit.get_tree_hash()) + f"{commit1_sha} commit\n"
             return d
 

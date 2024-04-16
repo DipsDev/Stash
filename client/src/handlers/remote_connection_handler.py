@@ -153,7 +153,7 @@ class RemoteConnectionHandler:
 
         objects.write_file(os.path.join(fd_path, sha[2:]), data, binary_=True)
 
-    def connect(self, repo_fingerprint: str | None):
+    def connect(self, repo_fingerprint: str | None, branch: str = None):
         """Connect to remote web_server"""
         self.socket.connect(('127.0.0.1', 8838))
 
@@ -161,9 +161,12 @@ class RemoteConnectionHandler:
 
         username = repo_fingerprint if repo_fingerprint else input("stash: Please provide your stash fingerprint (ex: "
                                                                    "username@repository.stash): ")
+        remote_branch = branch if branch else input("stash: Input your remote branch name (ex 'main'): ")
+
         password = getpass.getpass(f"{username}'s password: ")
 
-        self.socket.send(self.handler.encrypt_packet(create_pkt_line("stash-login", f"{username}@{password}")))
+        self.socket.send(
+            self.handler.encrypt_packet(create_pkt_line("stash-login", f"{username}@{remote_branch}@{password}")))
 
         pkt_command, pkt_data = parse_pkt(self.handler.decrypt_incoming_packet())
         if pkt_command == "stash-error":
