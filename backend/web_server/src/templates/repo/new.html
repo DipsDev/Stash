@@ -14,47 +14,40 @@
 {% endblock %}
 
 {% block content %}
-<div class="px-3 pt-6">
-    <h1 class="text-2xl md:text-3xl">Create a new repository</h1>
-    <p class="text-gray-600 text-sm mt-1 md:text-lg">A repository contains all your project's files, including revision history.</p>
-    <div class="h-[1px] w-full bg-gray-400 mt-3"></div>
-    <form class="flex flex-col items-start justify-center" action="{{ url_for('repo.new') }}" method="post">
-        {{ form.csrf_token }}
-        <div class="mb-1 mt-3 text-red-600">
-            {% for message in form.initial_value.errors + form.repository_name.errors + form.source_id.errors%}
-                <p class="my-1">{{ message }}</p>
-            {% endfor %}
-        </div>
-        <label for="repository_name" class="mt-4 font-semibold">Repository name</label>
-        <input id="repository_name" name="repository_name" type="text" class="py-1 px-2 w-full border border-gray-300 my-1 outline-none focus:border-blue-500">
-        <label for="description" class="mt-4 font-semibold">Description (optional):</label>
-        <input id="description" name="description" type="text" class="py-1 px-2 w-full border border-gray-300 my-1 outline-none focus:border-blue-500">
+<section class="w-full flex flex-row items-center justify-center">
+    <div class="px-3 pt-6">
+        <h1 class="text-2xl md:text-3xl font-bold">Create a new repository</h1>
+        <p class="text-gray-600 text-sm mt-1 md:text-lg">A repository contains all your project's files, including revision history.</p>
         <div class="h-[1px] w-full bg-gray-400 mt-3"></div>
-        <div class="flex flex-row items-start justify-center gap-1 mt-3">
-            <input id="empty" name="initial_value" type="radio" value="empty" class="mt-1" onclick="add_disable()" checked>
-            <div class="flex flex-col items-start justify-center">
-                <label for="empty" class="font-bold">Create an empty repository</label>
-                <p class="text-sm text-gray-600">Create an empty repository. You must initialize it yourself.</p>
+        <form class="flex flex-col items-start justify-center" action="{{ url_for('repo.new') }}" method="post">
+            {{ form.csrf_token }}
+            <div class="mb-1 mt-3 text-red-600">
+                {% for message in form.initial_value.errors + form.repository_name.errors + form.source_id.errors%}
+                    <p class="my-1">{{ message }}</p>
+                {% endfor %}
             </div>
-        </div>
-        <div class="flex flex-row items-start justify-center gap-1 mt-3">
-            <input id="readme" name="initial_value" type="radio" value="readme" class="mt-1" onclick="add_disable()">
-            <div class="flex flex-col items-start justify-center">
-                <label for="readme" class="font-bold">Initialize this repository with a README</label>
-                <p class="text-sm text-gray-600">Create a repository and commit README.md. You can clone the repository immediately</p>
+            <label for="repository_name" class="mt-4 font-semibold">Repository name</label>
+            <input id="repository_name" name="repository_name" type="text" class="py-1 px-2 w-full border border-gray-300 my-1 outline-none focus:border-blue-500">
+            <label for="description" class="mt-4 font-semibold">Description (optional):</label>
+            <input id="description" name="description" type="text" class="py-1 px-2 w-full border border-gray-300 my-1 outline-none focus:border-blue-500">
+            <div class="h-[1px] w-full bg-gray-400 mt-3"></div>
+            <div class="flex flex-row items-start justify-center gap-1 mt-3">
+                <input id="empty" name="initial_value" type="radio" value="empty" class="mt-1" onclick="add_disable()" checked>
+                <div class="flex flex-col items-start justify-center">
+                    <label for="empty" class="font-bold">Create an empty repository</label>
+                    <p class="text-sm text-gray-600">Create an empty repository. You must initialize it yourself.</p>
+                </div>
             </div>
-        </div>
-        <div class="flex flex-row items-start justify-center gap-1 mt-3">
-            <input id="stash_clone" name="initial_value" type="radio" value="clone" class="mt-1" onclick="remove_disable()">
-            <div class="flex flex-col items-start justify-center">
-                <label for="stash_clone" class="font-bold">Copy existing stash repository</label>
-                <p class="text-sm text-gray-600">Create a new repository by cloning an existing stash repository.</p>
+            <div class="flex flex-row items-start justify-center gap-1 mt-3">
+                <input id="readme" name="initial_value" type="radio" value="readme" class="mt-1" onclick="add_disable()">
+                <div class="flex flex-col items-start justify-center">
+                    <label for="readme" class="font-bold">Initialize this repository with a README</label>
+                    <p class="text-sm text-gray-600">Create a repository and commit README.md. This is where you can write a long description for your project.</p>
+                </div>
             </div>
-        </div>
-        <input id="source_id" disabled name="source_id" type="text" placeholder="Source stash repository ID..."
-               class="py-2 px-2 w-full border border-gray-300 my-4 outline-none focus:border-blue-500 disabled:bg-gray-100" />
-        <div class="h-[1px] w-full bg-gray-400 mt-1"></div>
-        <input type="submit" value="Create repository" class="md:w-auto px-4 w-full text-center bg-[#00A65A] text-sm py-2 mt-3 text-white rounded hover:cursor-pointer hover:bg-green-700">
-    </form>
-</div>
+            <div class="h-[1px] w-full bg-gray-400 mt-4"></div>
+            <input type="submit" value="Create repository" class="ml-auto md:w-auto px-4 w-full text-center bg-[#00A65A] text-sm py-2 mt-3 text-white rounded hover:cursor-pointer hover:bg-green-700">
+        </form>
+    </div>
+</section>
 {% endblock %}
