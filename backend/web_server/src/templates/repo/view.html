@@ -2,10 +2,6 @@
 
 {% set repo_fingerprint = repo.user.username + "@" + repo.name + ".stash" %}
 
-{% if current_user.is_authenticated %}
-    {% set repo_fingerprint = current_user.username + "@" + repo.name + ".stash" %}
-{% endif %}
-
 
 
 {% macro tab_link(endpoint, name) %}
