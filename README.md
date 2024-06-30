@@ -1,8 +1,6 @@
 # Stash
 A custom git service and github like site.\
-Stash, Stashhub(Much like git and github)\
-\
-This project is a school project, and later was submmited as a 5 units bagrot.\
+This project is a school project, and later was submmited as a 5 units bagrot project.\
 
 
 ## Stash
@@ -21,9 +19,10 @@ There are a few actions available in Stash:
 - Clone: clone any stash-supported cloud repository.
 - Branch: branch any local stash repository branch, or delete an existing one.
 - Checkout: checkout to any existing branch, or branch-n-checkout a branch.
-- Merge: merge between local stash-repositories, online merging is not supported.
+- Merge: merge between local stash-repositories, stashhub / cloud merging is not supported.
 
 ## StashHub
+Not to confuse with Stash, Stashub is a github like website.
 The service was built using flask and sqlite.\
 The service itself is made of two servers, which support concurrency and are built in python. 
 
